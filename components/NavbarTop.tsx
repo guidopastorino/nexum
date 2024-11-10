@@ -35,12 +35,7 @@ const NavbarTop = () => {
 
         {/* Renderizado condicional según la autenticación */}
         <div className="flex items-center gap-3">
-          <LoggedIn>
-            <Link href={"/create"} className='px-3 h-9 flex justify-center items-center gap-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700/50 active:brightness-90 duration-100'>
-              <BsPlus size={25} />
-              <span className='text-sm'>Create new post</span>
-            </Link>
-          </LoggedIn>
+          <CreateNewOptionsMenu />
           {
             status === "loading"
               ? <div className='flex justify-center items-center gap-2'>{Array.from({ length: 5 }).map((_, i) => (<div key={i} className='rounded-full bg-gray-300 dark:bg-neutral-600 w-10 h-10 animate-pulse'></div>))}</div>
@@ -63,26 +58,24 @@ const NavbarTop = () => {
 export default NavbarTop;
 
 const ProfileOptionsMenu = () => {
-
-  let itemClass = 'block w-full px-3 py-2 bg-white dark:bg-neutral-800 active:brightness-95 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700'
-
   return (
     <DropdownMenu
-      button={<button className='dark:hover:bg-neutral-900 hover:bg-gray-50 w-10 h-10 rounded-full flex justify-center items-center text-lg'>
+      button={<button className='w-10 h-10 rounded-full flex justify-center items-center text-lg itemHover'>
         <BsPerson />
       </button>}
       positionX='right'
+      canClickOtherElements={true}
     >
       {(MenuRef, menu, setMenu) => (
         <>
           {menu && (
-            <div ref={MenuRef} className='py-1 dark:bg-neutral-800 rounded-lg overflow-hidden w-28 select-none'>
+            <div ref={MenuRef} className='py-1 dark:bg-neutral-800 rounded-lg overflow-hidden w-32 select-none'>
               <Link
                 href={"/profile"}
                 onClick={() => {
                   setMenu(!menu);
                 }}
-                className={itemClass}
+                className="itemClass"
               >
                 Profile
               </Link>
@@ -90,12 +83,12 @@ const ProfileOptionsMenu = () => {
                 onClick={() => {
                   signOut({ callbackUrl: "/" })
                 }}
-                className={itemClass}
+                className="itemClass"
               >
                 Log out
               </div>
               <ThemeHandler>{(currentTheme, systemTheme, changeTheme, currentIcon) => (
-                <div className={`flex justify-start items-center gap-3 ${itemClass}`} onClick={changeTheme} title={currentTheme == 'system' ? `${currentTheme} ${systemTheme}` : currentTheme}>
+                <div className={`flex justify-start items-center gap-3 itemClass`} onClick={changeTheme} title={currentTheme == 'system' ? `${currentTheme} ${systemTheme}` : currentTheme}>
                   <button className='rounded-full text-lg flex justify-center items-center'>
                     {currentIcon}
                   </button>
@@ -110,10 +103,57 @@ const ProfileOptionsMenu = () => {
   );
 };
 
-
+const CreateNewOptionsMenu = () => {
+  return (
+    <LoggedIn>
+      <DropdownMenu
+        button={<button className='w-10 h-10 rounded-full flex justify-center items-center text-lg itemHover'>
+          <BsPlus size={25} />
+        </button>}
+        positionX='right'
+        canClickOtherElements={true}
+      >
+        {(MenuRef, menu, setMenu) => (
+          <>
+            {menu && (
+              <div ref={MenuRef} className='py-1 dark:bg-neutral-800 rounded-lg overflow-hidden w-max select-none'>
+                <Link
+                  href={"/create/post"}
+                  onClick={() => {
+                    setMenu(!menu);
+                  }}
+                  className="itemClass"
+                >
+                  Create new post
+                </Link>
+                <Link
+                  href={"/create/feed"}
+                  onClick={() => {
+                    setMenu(!menu);
+                  }}
+                  className="itemClass"
+                >
+                  Create new feed
+                </Link>
+                <Link
+                  href={"/create/community"}
+                  onClick={() => {
+                    setMenu(!menu);
+                  }}
+                  className="itemClass"
+                >
+                  Create new community
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </DropdownMenu>
+    </LoggedIn>
+  )
+}
 
 // Barra de resultados de búsqueda
-
 const NavbarSearch = () => {
   const InputRef = useRef<HTMLInputElement | null>(null);
   const ResultsRef = useRef<HTMLDivElement | null>(null);
@@ -169,7 +209,7 @@ const NavbarSearch = () => {
 
     if (queryValue.trim() === '') {
       setUsers([]);
-      setPosts([]); // Limpiamos también los posts
+      setPosts([]);
       setPagination({ currentPage: 1, nextPage: null, prevPage: null, totalResults: 0 });
       setShowResults(false);
       return;
@@ -217,7 +257,7 @@ const NavbarSearch = () => {
         ref={InputRef}
         type="search"
         placeholder="Start typing to search anything..."
-        className="w-full p-2 rounded-md h-9"
+        className="w-full p-2 rounded-md h-9 text-ellipsis"
         onFocus={() => setShowResults(true)}
         onChange={getResultsPagination}
         onKeyDown={handleKeyDown}
@@ -227,7 +267,7 @@ const NavbarSearch = () => {
         <div ref={ResultsRef} className="fixed md:absolute top-12 md:top-full md:mt-3 left-0 w-full h-[calc(100dvh-48px)] md:h-[60dvh] md:max-h-[600px] pb-3 bg-white dark:bg-neutral-800 md:rounded-md z-50 md:shadow-lg overflow-y-auto">
           <div className="flex justify-between items-center gap-3 mb-3 sticky top-0 bg-white dark:bg-neutral-800 z-40 py-2 px-3">
             <span className="block font-medium text-xl">Search results for "{query}"</span>
-            <button onClick={() => setShowResults(false)} className='dark:hover:bg-neutral-900 hover:bg-gray-50 w-10 h-10 rounded-full flex justify-center items-center text-lg'>
+            <button onClick={() => setShowResults(false)} className='itemHover w-10 h-10 rounded-full flex justify-center items-center text-lg'>
               <RxCross2 />
             </button>
           </div>
@@ -240,7 +280,7 @@ const NavbarSearch = () => {
           {!isloading && <>
             <div className="w-full">
               {users.map((user) => (
-                <Link onClick={() => setShowResults(false)} href={`/${user.username}`} key={user._id} className="flex w-full items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-neutral-700">
+                <Link onClick={() => setShowResults(false)} href={`/${user.username}`} key={user._id} className="flex w-full items-center gap-3 p-3 itemHover">
                   <img src={user.profileImage} alt={user.username} className="w-10 h-10 rounded-full" />
                   <div>
                     <p className="font-medium">{user.fullname}</p>

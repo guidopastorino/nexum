@@ -1,3 +1,5 @@
+// Post contains EVERY feature, like: quoted post, reposted, normal post, if it is from a feed or a community..
+
 import mongoose, { Schema, model, Types, Document } from 'mongoose';
 
 interface PostDocument extends Document {

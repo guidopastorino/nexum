@@ -11,10 +11,11 @@ interface DropdownMenuProps {
   ) => React.ReactNode;
   positionX?: 'left' | 'center' | 'right';
   positionY?: 'top' | 'bottom';
+  canClickOtherElements?: boolean; // if true, user can click other elements while menu is open, otherwise, cannot click elements
 }
 
 // Agregar más customización (posicion, efecto, etc...)
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ button, children, positionX, positionY }) => {
+const DropdownMenu: React.FC<DropdownMenuProps> = ({ button, children, positionX, positionY, canClickOtherElements = false }) => {
   const ButtonRef = useRef<HTMLButtonElement>(null);
   const MenuRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +48,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ button, children, positionX
 
   return (
     <>
-      {menu && <div className="w-full h-dvh bg-transparent cursor-default fixed z-50 top-0 left-0"></div>} {/* background */}
+      {menu && !canClickOtherElements && <div className="w-full h-dvh bg-transparent cursor-default fixed z-50 top-0 left-0"></div>} {/* background */}
       <div className='relative w-max shrink-0'>
         {React.cloneElement(button, { ref: ButtonRef, onClick: () => setMenu(!menu) })}
         <div className={`absolute ${positionX ? positionXClasses : "right-0"} z-50 shadow-lg`} style={positionYstyles}>

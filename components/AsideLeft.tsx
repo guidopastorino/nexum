@@ -4,12 +4,14 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 // icons
 import { BiSolidHomeCircle, BiHomeCircle } from "react-icons/bi";
-import { MdEmail, MdOutlineEmail, MdOutlinePeopleAlt, MdOutlinePeople, MdOutlinePersonOutline, MdPerson } from "react-icons/md";
+import { MdEmail, MdOutlineEmail, MdPeople, MdOutlinePeople, MdOutlinePersonOutline, MdPerson, MdPeopleOutline } from "react-icons/md";
 import { IoSearchOutline, IoSearch } from "react-icons/io5";
 import { BsFillBellFill, BsBell } from "react-icons/bs";
 import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { RiFileListLine, RiFileListFill } from 'react-icons/ri'
+import useUser from '@/hooks/useUser';
 
 type NavigationLinkProps = {
   icon: React.ReactNode;
@@ -21,15 +23,17 @@ type NavigationLinkProps = {
 const AsideLeft = () => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const user = useUser()
 
   const navLinks: NavigationLinkProps[] = [
-    { icon: <BiHomeCircle />, activeIcon: <BiSolidHomeCircle />, title: "Feed", route: "/" },
-    { icon: <MdOutlineEmail />, activeIcon: <MdEmail />, title: "Messages", route: "/messages" },
+    { icon: <BiHomeCircle />, activeIcon: <BiSolidHomeCircle />, title: "Home", route: "/" },
     { icon: <IoSearchOutline />, activeIcon: <IoSearch />, title: "Explore", route: "/explore" },
+    { icon: <RiFileListLine />, activeIcon: <RiFileListFill />, title: "Feeds", route: "/feeds" },
     { icon: <BsBell />, activeIcon: <BsFillBellFill />, title: "Notifications", route: "/notifications" },
+    { icon: <MdPeopleOutline />, activeIcon: <MdPeople />, title: "Communities", route: "/communities" },
     { icon: <GoBookmark />, activeIcon: <GoBookmarkFill />, title: "Bookmarks", route: "/bookmarks" },
-    { icon: <MdOutlinePeopleAlt />, activeIcon: <MdOutlinePeople />, title: "Communities", route: "/communities" },
-    { icon: <MdOutlinePersonOutline />, activeIcon: <MdPerson />, title: "Profile", route: `/${session?.user?.username}` },
+    { icon: <MdOutlineEmail />, activeIcon: <MdEmail />, title: "Messages", route: "/messages" },
+    { icon: <MdOutlinePersonOutline />, activeIcon: <MdPerson />, title: "Profile", route: `/${user.username}` },
   ];
 
   // Muestra los skeletons mientras la sesión está cargando
@@ -49,7 +53,7 @@ const AsideLeft = () => {
         {navLinks
           .filter(link =>
             // Si el usuario no está logueado, renderiza solo "Feed", "Explore" y "Communities"
-            session?.user ? true : (link.route === '/' || link.route === '/explore' || link.route === '/communities')
+            session?.user ? true : (link.route === '/' || link.route === '/explore' || link.route === '/feeds' || link.route === '/communities')
           )
           .map((el, i) => (
             <li key={i} className='list-none'>

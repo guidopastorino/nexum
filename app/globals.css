@@ -11,3 +11,15 @@
 button>* {
   pointer-events: none;
 }
+
+/*  */
+
+/* used for causal items hovering */
+.itemHover {
+  @apply bg-white dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700/50 active:bg-gray-200 dark:active:bg-neutral-600/50 duration-100 cursor-pointer whitespace-nowrap;
+}
+
+/* used for dropdown menu items */
+.itemClass {
+  @apply itemHover w-full px-3 py-2 flex justify-start items-center gap-3
+}
