@@ -5,13 +5,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import AuthModal from '@/components/modal/AuthModal';
 import DropdownMenu from './DropdownMenu';
-import { BsPerson } from 'react-icons/bs';
+import { BsPerson, BsPlus } from 'react-icons/bs';
 import ThemeHandler from './ThemeHandler';
 import { RxCross2 } from "react-icons/rx";
 import ky from 'ky';
 import { PostSearchPaginationProps, SearchResultsResponse, UserSearchPaginationProps } from '@/types/types';
 import { useRouter } from 'next/navigation';
 import Loader from './Loader';
+import LoggedIn from './auth/LoggedIn';
 
 const NavbarTop = () => {
   const { data: session, status } = useSession();
@@ -34,9 +35,15 @@ const NavbarTop = () => {
 
         {/* Renderizado condicional según la autenticación */}
         <div className="flex items-center gap-3">
+          <LoggedIn>
+            <Link href={"/create"} className='px-3 h-9 flex justify-center items-center gap-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700/50 active:brightness-90 duration-100'>
+              <BsPlus size={25} />
+              <span className='text-sm'>Create new post</span>
+            </Link>
+          </LoggedIn>
           {
             status === "loading"
-              ? <div className='rounded-full bg-gray-300 dark:bg-neutral-600 w-10 h-10 animate-pulse'></div>
+              ? <div className='flex justify-center items-center gap-2'>{Array.from({ length: 5 }).map((_, i) => (<div key={i} className='rounded-full bg-gray-300 dark:bg-neutral-600 w-10 h-10 animate-pulse'></div>))}</div>
               : status === "authenticated"
                 ? <ProfileOptionsMenu />
                 : <AuthModal
@@ -102,6 +109,8 @@ const ProfileOptionsMenu = () => {
     </DropdownMenu>
   );
 };
+
+
 
 // Barra de resultados de búsqueda
 

@@ -7,9 +7,9 @@ type AsideRightProps = {
 // sticky side box
 const AsideRight: React.FC<AsideRightProps> = ({ children }) => {
   return (
-    <div>
+    <aside className='hidden lg:block'>
       {children}
-    </div>
+    </aside>
   )
 }
 

@@ -1,11 +1,11 @@
 import React from 'react'
-import Modal from './modal/Modal'
+import { PostProps } from '@/types/types'
 
-const Post = () => {
+const Post = ({ creatorId, }: PostProps) => {
   return (
-    <Modal buttonTrigger={<button>button</button>}>
-      <div className='flex flex-col justify-center items-center gap-5 rounded-lg p-10 bg-white dark:bg-neutral-800'>Hola</div>
-    </Modal>
+    <div role='article' className='w-full p-2 flex justify-center items-start border-y border-gray-100'>
+      {creatorId}
+    </div>
   )
 }
 

@@ -57,3 +57,20 @@ export type SearchResultsResponse = {
     totalResults: number;
   };
 };
+
+// post
+export interface PostProps {
+  creatorId: string;
+  communityId?: string;
+  feedId?: string;
+  content: string;
+  tags?: string[];
+  likes: string[];
+  repostedFrom?: string;
+  isQuote?: boolean;
+  quotedPost?: string;
+  media?: string[];
+  type: 'normal' | 'repost' | 'quote';
+  comments: string[];
+  views: number;
+}
