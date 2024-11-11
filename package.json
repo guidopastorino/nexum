@@ -28,6 +28,7 @@
     "sqids": "^0.3.0",
     "uploadthing": "^7.3.0",
     "uuid": "^11.0.2",
+    "vaul": "^1.1.1",
     "yup": "^1.4.0"
   },
   "devDependencies": {

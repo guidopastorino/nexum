@@ -1,7 +1,7 @@
 "use client";
 
 import AsideRight from "@/components/AsideRight";
-import UploadFileButton from "@/components/UploadFileButton";
+import BottomSheet from "@/components/BottomSheet";
 import useScroll from "@/hooks/useScroll";
 import { useRef } from "react";
 
@@ -23,7 +23,7 @@ const Page = () => {
   return (
     <>
       <div className='w-full overflow-hidden'>
-        some content here
+        <BottomSheet />
       </div>
 
       <AsideRight>
