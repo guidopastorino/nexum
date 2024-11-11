@@ -9,6 +9,7 @@ import Loader from '../Loader';
 import useShowMessage from '@/hooks/useShowMessage';
 import { createUser } from '@/utils/fetchFunctions';
 import Message from '../Message';
+import ShowPasswordInput from '../ShowPasswordInput';
 
 type AuthModalProps = {
   buttonTrigger: React.ReactElement<any, any>;
@@ -99,12 +100,16 @@ const LoginForm = ({ setShowRegister }: LoginFormProps) => {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Contraseña
               </label>
-              <Field
-                name="password"
-                type="password"
-                className={`mt-1 block w-full px-3 py-2 border ${errors.password && touched.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="Tu contraseña"
-              />
+              <ShowPasswordInput>
+                {(showPassword) => (
+                  <Field
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    className={`mt-1 block w-full px-3 py-2 border ${errors.password && touched.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
+                    placeholder="Tu contraseña"
+                  />
+                )}
+              </ShowPasswordInput>
               <ErrorMessage name="password" component="p" className="text-red-500 text-sm" />
             </div>
             <button disabled={isLoading} type="submit" className="flex justify-center items-center w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
@@ -209,12 +214,16 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Contraseña
               </label>
-              <Field
-                name="password"
-                type="password"
-                className={`mt-1 block w-full px-3 py-2 border ${errors.password && touched.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="Tu contraseña"
-              />
+              <ShowPasswordInput>
+                {(showPassword) => (
+                  <Field
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    className={`mt-1 block w-full px-3 py-2 border ${errors.password && touched.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
+                    placeholder="Tu contraseña"
+                  />
+                )}
+              </ShowPasswordInput>
               <ErrorMessage name="password" component="p" className="text-red-500 text-sm" />
             </div>
             <button disabled={isLoading} type="submit" className="flex justify-center items-center w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none">

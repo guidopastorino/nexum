@@ -23,7 +23,9 @@ const Page = () => {
   return (
     <>
       <div className='w-full overflow-hidden'>
-        <BottomSheet />
+        <BottomSheet>
+          {Array.from({ length: 10 }).map((_, i) => <li className='w-full block text-start p-2 itemHover'>Lorem, ipsum dolor. {i}</li>)}
+        </BottomSheet>
       </div>
 
       <AsideRight>
