@@ -1,6 +1,7 @@
 "use client";
 
 import AsideRight from "@/components/AsideRight";
+import UploadFileButton from "@/components/UploadFileButton";
 import useScroll from "@/hooks/useScroll";
 import { useRef } from "react";
 

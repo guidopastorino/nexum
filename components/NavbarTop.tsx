@@ -13,6 +13,7 @@ import { PostSearchPaginationProps, SearchResultsResponse, UserSearchPaginationP
 import { useRouter } from 'next/navigation';
 import Loader from './Loader';
 import LoggedIn from './auth/LoggedIn';
+import useUser from '@/hooks/useUser';
 
 const NavbarTop = () => {
   const { data: session, status } = useSession();
@@ -58,10 +59,12 @@ const NavbarTop = () => {
 export default NavbarTop;
 
 const ProfileOptionsMenu = () => {
+  const user = useUser()
+
   return (
     <DropdownMenu
-      button={<button className='w-10 h-10 rounded-full flex justify-center items-center text-lg itemHover'>
-        <BsPerson />
+      button={<button className='w-9 h-9 rounded-full overflow-hidden flex justify-center items-center text-lg itemHover'>
+        <img src={user.profileImage || "/default_pfp.jpg"} className='w-full h-full object-cover' />
       </button>}
       positionX='right'
       canClickOtherElements={true}
@@ -71,7 +74,7 @@ const ProfileOptionsMenu = () => {
           {menu && (
             <div ref={MenuRef} className='py-1 dark:bg-neutral-800 rounded-lg overflow-hidden w-32 select-none'>
               <Link
-                href={"/profile"}
+                href={`/${user.username}`}
                 onClick={() => {
                   setMenu(!menu);
                 }}
