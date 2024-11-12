@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import AuthModal from '@/components/modal/AuthModal';
 import DropdownMenu from './DropdownMenu';
-import { BsPerson, BsPlus } from 'react-icons/bs';
+import { BsPencilSquare, BsPerson, BsPlus } from 'react-icons/bs';
 import ThemeHandler from './ThemeHandler';
 import { RxCross2 } from "react-icons/rx";
 import ky from 'ky';
@@ -14,6 +14,9 @@ import { useRouter } from 'next/navigation';
 import Loader from './Loader';
 import LoggedIn from './auth/LoggedIn';
 import useUser from '@/hooks/useUser';
+import { RiFileListLine } from 'react-icons/ri';
+import { MdPeopleOutline } from 'react-icons/md';
+import ResponsiveMenu from './ResponsiveMenu';
 
 const NavbarTop = () => {
   const { data: session, status } = useSession();
@@ -62,96 +65,87 @@ const ProfileOptionsMenu = () => {
   const user = useUser()
 
   return (
-    <DropdownMenu
-      button={<button className='w-9 h-9 rounded-full overflow-hidden flex justify-center items-center text-lg itemHover'>
-        <img src={user.profileImage || "/default_pfp.jpg"} className='w-full h-full object-cover' />
-      </button>}
-      positionX='right'
-      canClickOtherElements={true}
-    >
-      {(MenuRef, menu, setMenu) => (
-        <>
-          {menu && (
-            <div ref={MenuRef} className='py-1 dark:bg-neutral-800 rounded-lg overflow-hidden w-32 select-none'>
-              <Link
-                href={`/${user.username}`}
-                onClick={() => {
-                  setMenu(!menu);
-                }}
-                className="itemClass"
-              >
-                Profile
-              </Link>
-              <div
-                onClick={() => {
-                  signOut({ callbackUrl: "/" })
-                }}
-                className="itemClass"
-              >
-                Log out
-              </div>
-              <ThemeHandler>{(currentTheme, systemTheme, changeTheme, currentIcon) => (
-                <div className={`flex justify-start items-center gap-3 itemClass`} onClick={changeTheme} title={currentTheme == 'system' ? `${currentTheme} ${systemTheme}` : currentTheme}>
-                  <button className='rounded-full text-lg flex justify-center items-center'>
-                    {currentIcon}
-                  </button>
-                  <span>{currentTheme}</span>
-                </div>
-              )}</ThemeHandler>
+    <LoggedIn>
+      <ResponsiveMenu
+        trigger={
+          <button className='w-9 h-9 rounded-full overflow-hidden flex justify-center items-center text-lg itemHover'>
+            <img src={user.profileImage || "/default_pfp.jpg"} className='w-full h-full object-cover' />
+          </button>
+        }
+      >
+        {(menuOpen, setMenuOpen) => (
+          <>
+            <Link
+              href={`/${user.username}`}
+              onClick={() => {
+                setMenuOpen(!menuOpen);
+              }}
+              className="itemClass itemHover"
+            >
+              Profile
+            </Link>
+            <div
+              onClick={() => {
+                signOut({ callbackUrl: "/" })
+              }}
+              className="itemClass itemHover"
+            >
+              Log out
             </div>
-          )}
-        </>
-      )}
-    </DropdownMenu>
+            <ThemeHandler>{(currentTheme, systemTheme, changeTheme, currentIcon) => (
+              <div className={`flex justify-start items-center gap-3 itemClass`} onClick={changeTheme} title={currentTheme == 'system' ? `${currentTheme} ${systemTheme}` : currentTheme}>
+                <button className='rounded-full text-lg flex justify-center items-center'>
+                  {currentIcon}
+                </button>
+                <span>{currentTheme}</span>
+              </div>
+            )}</ThemeHandler>
+          </>
+        )}
+      </ResponsiveMenu>
+    </LoggedIn>
   );
 };
 
 const CreateNewOptionsMenu = () => {
   return (
     <LoggedIn>
-      <DropdownMenu
-        button={<button className='w-10 h-10 rounded-full flex justify-center items-center text-lg itemHover'>
-          <BsPlus size={25} />
-        </button>}
-        positionX='right'
-        canClickOtherElements={true}
+      <ResponsiveMenu
+        trigger={
+          <button className="w-10 h-10 rounded-full flex justify-center items-center text-lg itemHover">
+            <BsPlus size={25} />
+          </button>
+        }
       >
-        {(MenuRef, menu, setMenu) => (
+        {(menuOpen, setMenuOpen) => (
           <>
-            {menu && (
-              <div ref={MenuRef} className='py-1 dark:bg-neutral-800 rounded-lg overflow-hidden w-max select-none'>
-                <Link
-                  href={"/create/post"}
-                  onClick={() => {
-                    setMenu(!menu);
-                  }}
-                  className="itemClass"
-                >
-                  Create new post
-                </Link>
-                <Link
-                  href={"/create/feed"}
-                  onClick={() => {
-                    setMenu(!menu);
-                  }}
-                  className="itemClass"
-                >
-                  Create new feed
-                </Link>
-                <Link
-                  href={"/create/community"}
-                  onClick={() => {
-                    setMenu(!menu);
-                  }}
-                  className="itemClass"
-                >
-                  Create new community
-                </Link>
-              </div>
-            )}
+            <Link
+              href="/create/post"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="itemClass itemHover"
+            >
+              <BsPencilSquare size={20} />
+              <span>Create new post</span>
+            </Link>
+            <Link
+              href="/create/feed"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="itemClass itemHover"
+            >
+              <RiFileListLine size={20} />
+              <span>Create new feed</span>
+            </Link>
+            <Link
+              href="/create/community"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="itemClass itemHover"
+            >
+              <MdPeopleOutline size={20} />
+              <span>Create new community</span>
+            </Link>
           </>
         )}
-      </DropdownMenu>
+      </ResponsiveMenu>
     </LoggedIn>
   )
 }

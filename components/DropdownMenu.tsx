@@ -3,29 +3,31 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 interface DropdownMenuProps {
-  button: React.ReactElement;
-  children: (
-    menuRef: React.RefObject<HTMLDivElement>,
-    menu: boolean,
-    setMenu: React.Dispatch<React.SetStateAction<boolean>>
-  ) => React.ReactNode;
+  trigger: React.ReactElement;
+  children: React.ReactNode;
   positionX?: 'left' | 'center' | 'right';
   positionY?: 'top' | 'bottom';
   canClickOtherElements?: boolean; // if true, user can click other elements while menu is open, otherwise, cannot click elements
+  isOpen?: boolean; // Estado opcional
+  setOpen?: (open: boolean) => void; // Función de manejo opcional
 }
 
 // Agregar más customización (posicion, efecto, etc...)
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ button, children, positionX, positionY, canClickOtherElements = false }) => {
+const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, children, positionX, positionY, canClickOtherElements = false, isOpen, setOpen }) => {
   const ButtonRef = useRef<HTMLButtonElement>(null);
   const MenuRef = useRef<HTMLDivElement>(null);
 
-  const [menu, setMenu] = useState<boolean>(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Usar el estado interno si no se proporcionan isOpen y setOpen
+  const openState = isOpen !== undefined ? isOpen : internalOpen;
+  const toggleOpen = setOpen || setInternalOpen;
 
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
       if (e.target === ButtonRef.current) return;
       if (!MenuRef.current?.contains(e.target as Node)) {
-        setMenu(false);
+        toggleOpen(false);
       }
     };
     document.addEventListener('mousedown', handleMouseDown);
@@ -48,34 +50,15 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ button, children, positionX
 
   return (
     <>
-      {menu && !canClickOtherElements && <div className="w-full h-dvh bg-transparent cursor-default fixed z-50 top-0 left-0"></div>} {/* background */}
+      {isOpen && !canClickOtherElements && <div className="w-full h-dvh bg-transparent cursor-default fixed z-50 top-0 left-0"></div>} {/* background */}
       <div className='relative w-max shrink-0'>
-        {React.cloneElement(button, { ref: ButtonRef, onClick: () => setMenu(!menu) })}
-        <div className={`absolute ${positionX ? positionXClasses : "right-0"} z-50 shadow-lg`} style={positionYstyles}>
-          {children(MenuRef, menu, setMenu)}
-        </div>
+        {React.cloneElement(trigger, { ref: ButtonRef, onClick: () => toggleOpen(!isOpen) })}
+        {isOpen && <div ref={MenuRef} className={`absolute ${positionX ? positionXClasses : "right-0"} z-50 shadow-lg`} style={positionYstyles}>
+          {children}
+        </div>}
       </div>
     </>
   );
 };
 
 export default DropdownMenu;
-
-
-// Usage:
-/*
-<DropdownMenu
-  button={<button className='dark:hover:bg-neutral-900 hover:bg-gray-50 w-10 h-10 rounded-full flex justify-center items-center text-lg'><BsThreeDots /></button>}
-  positionX='left'
->
-  {(MenuRef, menu, setMenu) => (
-    <>
-      {menu && <div ref={MenuRef} className='py-1 bg-neutral-800 rounded-lg overflow-hidden'>
-        <div onClick={() => {
-          setMenu(!menu)
-        }} className='w-max px-3 py-2 bg-neutral-800 active:brightness-95 cursor-pointer hover:bg-neutral-700'>Clear all bookmarks</div>
-      </div>}
-    </>
-  )}
-</DropdownMenu>
-*/
