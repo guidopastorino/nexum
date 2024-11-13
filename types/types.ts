@@ -63,6 +63,7 @@ export interface PostMedia {
   type: 'image' | 'video';
   filename: string;
   extension: string;
+  src: string;
   // ...
 }
 

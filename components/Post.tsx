@@ -77,9 +77,7 @@ const Post = ({
           {/* content and media */}
           <div>
             <span>{content}</span>
-            {!!media?.length && media.map((media, i) => (
-              <img className='w-full rounded-lg object-contain' key={i} src={media} alt='media' />
-            ))}
+            <MediaGallery media={media ?? []} />
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
           {type === 'quote' && quotedPost?._id && <>
@@ -92,12 +90,8 @@ const Post = ({
                 <span>·</span>
                 <span>{timeAgo}</span>
               </div>
-              {!!quotedPost?.media && <div className='flex justify-start items-center gap-2'>
-                {quotedPost?.media.map((media, i) => (
-                  <img className='w-20 h-20 rounded-lg object-cover' key={i} src={media} alt='media' />
-                ))}
-              </div>}
               <span>{quotedPost?.content}</span>
+              <MediaGallery media={quotedPost?.media ?? []} />
             </Link>
           </>}
           {/* estadisticas del post normal */}
@@ -206,9 +200,7 @@ const Post = ({
           {/* content and media */}
           <div>
             <span>{repostedFrom?.content}</span>
-            {!!repostedFrom?.media?.length && repostedFrom?.media.map((media, i) => (
-              <img className='w-full rounded-lg object-contain' key={i} src={media} alt='media' />
-            ))}
+            <MediaGallery media={repostedFrom?.media ?? []} />
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
           {repostedFrom?.quotedPost && repostedFrom?.quotedPost?._id && <>
@@ -221,12 +213,10 @@ const Post = ({
                 <span>·</span>
                 <span>{timeAgo}</span>
               </div>
-              {!!repostedFrom?.quotedPost?.media && <div className='flex justify-start items-center gap-2'>
-                {repostedFrom?.quotedPost?.media.map((media, i) => (
-                  <img className='w-20 h-20 rounded-lg object-cover' key={i} src={media} alt='media' />
-                ))}
-              </div>}
+              {/* reposted quoted post content */}
               <span>{repostedFrom?.quotedPost?.content}</span>
+              {/* reposted quoted post media */}
+              <MediaGallery media={repostedFrom?.quotedPost?.media ?? []} />
             </Link>
           </>}
           {/* estadisticas del post reposteado (el original) */}
@@ -283,7 +273,7 @@ const Post = ({
   }
 
   return (
-    <div className='w-full max-w-xl mx-auto bg-white dark:bg-neutral-800 border-b dark:border-neutral-700 p-2 mb-2'>
+    <div className='w-full max-w-xl mx-auto bg-white dark:bg-neutral-800 border-b dark:border-neutral-700 p-3 mb-2'>
       {/* si es un repost, indicar quién lo reposteó */}
       {type === "repost" && <div className='text-black dark:text-neutral-200 flex justify-start items-center gap-2 mb-2'>
         <div className="w-10 h-10 flex justify-end items-center">
@@ -317,3 +307,98 @@ function formatTimeAgo(date: Date) {
   const years = Math.floor(days / 365);
   return `${years}y`;
 }
+
+/* for now it will be string[] and images */
+
+
+const MediaGallery = ({ media }: { media: string[] }) => {
+  const displayMedia = media.slice(0, 4); // Solo mostramos hasta las primeras 4 imágenes
+  const extraCount = media.length - 4; // Cantidad de imágenes extra
+  
+  return (
+    <div
+      className={`grid gap-2 ${
+        media.length === 1
+          ? 'grid-cols-1'
+          : media.length === 2
+          ? 'grid-cols-2'
+          : media.length === 3
+          ? 'grid-cols-3 grid-rows-2'
+          : 'grid-cols-2'
+      }`}
+    >
+      {displayMedia.map((url, i) => (
+        <div
+          key={i}
+          className={`relative overflow-hidden rounded-lg ${
+            media.length === 3
+              ? i === 0
+                ? 'col-span-2 row-span-2' // Primera imagen ocupa la mitad izquierda
+                : 'col-span-1' // Las otras dos ocupan la mitad derecha
+              : ''
+          }`}
+        >
+          <img src={url} alt={`media-${i}`} className="w-full h-full object-cover" />
+          
+          {/* Mostrar el overlay "+n" en la última imagen si hay más de 4 */}
+          {i === 3 && extraCount > 0 && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-2xl font-bold">
+              +{extraCount}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// for perfect splitting
+
+// const MediaGallery = ({ media }: { media: string[] }) => {
+//   const displayMedia = media.slice(0, 4); // Mostramos hasta las primeras 4 imágenes
+//   const extraCount = media.length - 4; // Cantidad de imágenes extra
+  
+//   return (
+//     <div
+//       className={`grid gap-2 ${
+//         media.length === 1
+//           ? 'grid-cols-1'
+//           : media.length === 2
+//           ? 'grid-cols-2'
+//           : media.length === 3
+//           ? 'grid-cols-2 grid-rows-2'
+//           : 'grid-cols-2'
+//       }`}
+//       style={{
+//         gridTemplateAreas: media.length === 3 ? "'a b' 'a c'" : '',
+//         gridTemplateColumns: media.length === 3 ? '1fr 1fr' : '',
+//         gridTemplateRows: media.length === 3 ? '1fr 1fr' : ''
+//       }}
+//     >
+//       {displayMedia.map((url, i) => (
+//         <div
+//           key={i}
+//           className={`relative overflow-hidden rounded-lg ${
+//             media.length === 3
+//               ? i === 0
+//                 ? 'col-span-1 row-span-2 h-full' // Primera imagen ocupa la mitad izquierda
+//                 : 'col-span-1 h-full' // Las otras dos ocupan la mitad derecha
+//               : ''
+//           }`}
+//           style={{
+//             gridArea: media.length === 3 && i === 0 ? 'a' : media.length === 3 && i === 1 ? 'b' : media.length === 3 && i === 2 ? 'c' : ''
+//           }}
+//         >
+//           <img src={url} alt={`media-${i}`} className="w-full h-full object-cover" />
+          
+//           {/* Mostrar el overlay "+n" en la última imagen si hay más de 4 */}
+//           {i === 3 && extraCount > 0 && (
+//             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-2xl font-bold">
+//               +{extraCount}
+//             </div>
+//           )}
+//         </div>
+//       ))}
+//     </div>
+//   );
+// };
