@@ -48,7 +48,7 @@ const AsideLeft = () => {
   }
 
   return (
-    <div className='hidden md:block w-full top-12 sticky overflow-y-auto py-3' style={{ height: 'calc(100dvh - 48px)' }}>
+    <div className='hidden md:flex flex-col gap-7 justify-between items-stretch w-full top-12 sticky overflow-y-auto py-3' style={{ height: 'calc(100dvh - 48px)' }}>
       <ul>
         {navLinks
           .filter(link =>
@@ -69,6 +69,14 @@ const AsideLeft = () => {
             </li>
           ))}
       </ul>
+
+      {/*  */}
+
+      <div>
+        <span className='text-sm text-center block dark:text-neutral-600 text-gray-400 break-words'>
+          &copy; {new Date().getFullYear()} Nexum Social. All rights reserved.
+        </span>
+      </div>
     </div>
   );
 };

@@ -52,27 +52,30 @@ const LoginForm = ({ setShowRegister }: LoginFormProps) => {
 
   const handleSubmit = async (values: { usernameOrEmail: string; password: string }) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
       const result = await signIn('credentials', {
         redirect: false,
         usernameOrEmail: values.usernameOrEmail,
         password: values.password,
-        callbackUrl: "/",
       });
 
       if (result?.error) {
         showMessage(result.error);
       } else if (result?.url) {
-        showMessage("Iniciando sesión...")
-        if (typeof window !== "undefined") window.location.href = result.url;
+        showMessage("Iniciando sesión...");
+
+        const url = new URL(result.url);
+        const callbackUrl = url.searchParams.get("callbackUrl");
+
+        window.location.href = callbackUrl || result.url;
       }
-      setIsLoading(false)
+      setIsLoading(false);
     } catch (error) {
       showMessage(error instanceof Error ? error.message : "Unexpected error");
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>

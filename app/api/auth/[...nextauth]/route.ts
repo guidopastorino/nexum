@@ -55,6 +55,9 @@ const handler = NextAuth({
   session: {
     strategy: "jwt",
   },
+  pages: {
+    signIn: "/"
+  },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, token }) {
@@ -101,8 +104,7 @@ const handler = NextAuth({
         }
       }
       return true;
-    }
-
+    },
   }
 });
 

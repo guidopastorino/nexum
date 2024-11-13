@@ -4,6 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import ky from 'ky';
 import Loader from '@/components/Loader';
+import { PostProps } from '@/types/types';
+import Post from '@/components/Post';
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
@@ -52,18 +54,12 @@ const SearchPage = () => {
             </ul>
           </div>
         )}
-        
+
         {results.posts && results.posts.length > 0 && (
           <div>
-            <h2>Posts</h2>
-            <ul>
-              {results.posts.map((post: any) => (
-                <li key={post._id}>
-                  <p>{post.content}</p>
-                  <span>By {post.creatorId}</span>
-                </li>
-              ))}
-            </ul>
+            {results.posts.map((post: PostProps, i: number) => (
+              <Post key={i} {...post} />
+            ))}
           </div>
         )}
       </div>

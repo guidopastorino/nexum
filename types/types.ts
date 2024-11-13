@@ -43,7 +43,7 @@ export type UserSearchPaginationProps = {
 
 export type PostSearchPaginationProps = {
   _id: string;
-  creatorId: string;
+  creator: string;
   content: string;
 }
 
@@ -59,18 +59,76 @@ export type SearchResultsResponse = {
 };
 
 // post
+export interface PostMedia {
+  type: 'image' | 'video';
+  filename: string;
+  extension: string;
+  // ...
+}
+
+// añadir props del post quoteado
+// como se almacena en la db es diferente a las props o a como se devuelve en el server
+// Interfaz de props para el componente Post
 export interface PostProps {
-  creatorId: string;
+  _id: string;
+  creator: {
+    _id: string;
+    profileImage: string;
+    fullname: string;
+    username: string;
+  };
   communityId?: string;
   feedId?: string;
   content: string;
   tags?: string[];
-  likes: string[];
-  repostedFrom?: string;
-  isQuote?: boolean;
-  quotedPost?: string;
+  likes: string[]; // Aquí se mostrarán los likes del post original cuando sea repost
+  repostedFrom?: {
+    _id: string,
+    creator: {
+      _id: string,
+      fullname: string,
+      username: string,
+      profileImage: string
+    },
+    content: string,
+    quotedPost?: {
+      _id: string;
+      creator: {
+        _id: string;
+        profileImage: string;
+        fullname: string;
+        username: string;
+      };
+      content: string;
+      media: string[];
+      createdAt: Date;
+    };
+    media: string[],
+    createdAt: Date,
+    likes: string[],
+    comments: string[],
+  };
+  quotedPost?: {
+    _id: string;
+    creator: {
+      _id: string;
+      profileImage: string;
+      fullname: string;
+      username: string;
+    };
+    content: string;
+    media: string[];
+    createdAt: Date;
+  };
   media?: string[];
   type: 'normal' | 'repost' | 'quote';
-  comments: string[];
-  views: number;
+  comments: string[]; // Los comentarios son los del post original
+  views?: number;
+  createdAt: Date;
 }
+
+
+// ¿que campos lleva completo cada post?
+/*
+
+*/

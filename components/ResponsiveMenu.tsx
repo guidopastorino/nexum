@@ -16,6 +16,10 @@ import DropdownMenu from './DropdownMenu';
 
 type ResponsiveMenuProps = {
   trigger: React.ReactElement;
+  dropdownMenuOptions?: {
+    width?: number;
+    canClickOtherElements?: boolean;
+  };
   children: (
     menuOpen: boolean,
     setMenuOpen: (open: boolean) => void,
@@ -23,7 +27,7 @@ type ResponsiveMenuProps = {
 };
 
 // pasar por props customizaciones de ambos componentes
-const ResponsiveMenu = ({ trigger, children }: ResponsiveMenuProps) => {
+const ResponsiveMenu = ({ trigger, dropdownMenuOptions, children }: ResponsiveMenuProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const isLargeScreen = useMediaQuery('(min-width: 768px)');
 
@@ -34,11 +38,15 @@ const ResponsiveMenu = ({ trigger, children }: ResponsiveMenuProps) => {
         <DropdownMenu
           trigger={trigger}
           positionX='right'
-          canClickOtherElements={true}
+          canClickOtherElements={dropdownMenuOptions?.canClickOtherElements ?? true}
           isOpen={menuOpen}
           setOpen={setMenuOpen}
         >
-          <div className='dark:bg-neutral-800 rounded-lg overflow-hidden w-max select-none py-1 border dark:border-neutral-600/15'>
+          <div
+            className={`dark:bg-neutral-800 rounded-lg overflow-hidden select-none py-1 border dark:border-neutral-600/15 ${dropdownMenuOptions?.width ? 'w-auto' : 'w-max'
+              }`}
+            style={dropdownMenuOptions?.width ? { width: `${dropdownMenuOptions.width}px` } : undefined}
+          >
             {children(menuOpen, setMenuOpen)}
           </div>
         </DropdownMenu>

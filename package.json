@@ -13,6 +13,7 @@
     "@reduxjs/toolkit": "^2.3.0",
     "@uploadthing/react": "^7.1.1",
     "bcrypt": "^5.1.1",
+    "date-fns": "^4.1.0",
     "formik": "^2.4.6",
     "ky": "^1.7.2",
     "mongoose": "^8.8.1",

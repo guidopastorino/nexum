@@ -41,15 +41,28 @@ export async function GET(req: Request) {
 
     // Buscar posts
     const postResults = await Post.find({
-      content: { $regex: query, $options: 'i' },
+      content: { $regex: query, $options: 'i' },  // Búsqueda por contenido
+      type: { $in: ['normal', 'quote'] }  // Filtrar solo los posts tipo 'normal' o 'quote'
     })
-      .limit(limitInt)
-      .skip((pageInt - 1) * limitInt)
-      .select('content tags creatorId')
-      .populate('creatorId', 'username profileImage')  // Llenar con el usuario que creó el post
-      .lean();
-
-    console.log(postResults)
+      .skip((pageInt - 1) * limitInt)  // Paginación: saltar los posts previos
+      .limit(limitInt)  // Limitar el número de posts por página
+      .populate({
+        path: 'creator',
+        select: 'profileImage fullname username',  // Obtener los datos del creador del post
+      })
+      .populate('repostedFrom', 'content')  // Obtener el contenido del post de donde se re-posteó
+      .populate({
+        path: 'quotedPost',
+        select: 'content media',  // Obtener el contenido y medios de los posts citados
+      })
+      .populate({
+        path: 'comments',
+        select: 'content createdAt',  // Obtener los comentarios (contenido y fecha de creación)
+        model: 'Comment',
+      })
+      .select('content media likes views type createdAt')  // Seleccionar las propiedades del post
+      .sort({ createdAt: -1 })  // Ordenar los posts por fecha de creación (más recientes primero)
+      .lean();  // Usar lean() para obtener documentos planos (más rápido y eficiente)
 
     // Calcular si hay una página siguiente
     const hasNextPage = userResults.length === limitInt || postResults.length === limitInt;

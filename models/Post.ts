@@ -1,33 +1,30 @@
-// Post contains EVERY feature, like: quoted post, reposted, normal post, if it is from a feed or a community..
-
 import mongoose, { Schema, model, Types, Document } from 'mongoose';
 
 interface PostDocument extends Document {
-  creatorId: Types.ObjectId;
-  communityId?: Types.ObjectId; // Asociar el post a una comunidad si aplica
+  _id: string;
+  creator: Types.ObjectId;
+  communityId?: Types.ObjectId;
   content: string;
-  tags?: string[]; // Etiquetas generadas automáticamente
+  tags?: string[];
   likes: Types.ObjectId[];
-  repostedFrom?: Types.ObjectId; // En caso de que sea un repost
-  isQuote?: boolean; // Define si el post es un quote
-  quotedPost?: Types.ObjectId; // Referencia al post quoteado
-  media?: string[]; // Archivos adjuntos, URLs de multimedia
+  repostedFrom?: Types.ObjectId;
+  quotedPost?: Types.ObjectId;
+  media?: string[];
   type: 'normal' | 'repost' | 'quote';
-  comments: Types.ObjectId[]; // Referencia a ids de comentarios (documentos)
+  comments: Types.ObjectId[];
   views: number;
 }
 
 const PostSchema = new Schema<PostDocument>(
   {
-    creatorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    communityId: { type: Schema.Types.ObjectId, ref: 'Community' }, // Comunidad opcional
+    creator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    communityId: { type: Schema.Types.ObjectId, ref: 'Community' },
     content: { type: String, required: true },
-    tags: { type: [String], index: true }, // Etiquetas indexadas para búsquedas rápidas
-    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Usuarios que dieron like
-    repostedFrom: { type: Schema.Types.ObjectId, ref: 'Post' }, // Referencia para repost
-    isQuote: { type: Boolean, default: false }, // Marca si es un quote
-    quotedPost: { type: Schema.Types.ObjectId, ref: 'Post' }, // Referencia al post quoteado
-    media: [{ type: String }], // URLs de multimedia, como imágenes o videos
+    tags: { type: [String] },
+    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    repostedFrom: { type: Schema.Types.ObjectId, ref: 'Post' },
+    quotedPost: { type: Schema.Types.ObjectId, ref: 'Post' },
+    media: [{ type: String }],
     type: { type: String, enum: ['normal', 'repost', 'quote'], default: 'normal' },
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
     views: { type: Number, default: 0 },
@@ -37,9 +34,27 @@ const PostSchema = new Schema<PostDocument>(
   }
 );
 
-// Índices adicionales
-PostSchema.index({ content: 'text', tags: 1 });
-PostSchema.index({ communityId: 1, createdAt: -1 }); // Para consultas de comunidad
-PostSchema.index({ creatorId: 1, createdAt: -1 }); // Para consultas por usuario
+// Creación de índices
+PostSchema.index({ content: 'text' }); // Mantener índice de texto solo para content
+// PostSchema.index({ tags: 1 }); // Índice estándar para tags
+PostSchema.index({ communityId: 1, createdAt: -1 });
+PostSchema.index({ creator: 1, createdAt: -1 });
 
 export default mongoose.models.Post || mongoose.model<PostDocument>('Post', PostSchema);
+
+
+/*
+  Campo   	     Tipo normal   	Tipo repost   	Tipo quote
+  _id         	     Sí	            Sí             	Sí
+  creator	           Sí            	Sí            	Sí
+  communityId	       Sí	            Sí	            Sí
+  content	           Sí	            Sí             	Sí
+  tags	             Sí	            Sí            	Sí
+  likes       	     Sí            	Sí            	Sí
+  repostedFrom	     No            	Sí            	No
+  quotedPost  	     No            	No            	Sí
+  media       	     Sí	            Sí            	Sí
+  type         	     Sí            	Sí	            Sí
+  comments     	     Sí            	Sí            	Sí
+  views     	       Sí            	Sí            	Sí
+*/

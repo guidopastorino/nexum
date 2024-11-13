@@ -39,7 +39,7 @@ export default function RootLayout({
                   </>
                 )
             */}
-              <div className='w-full grid gap-3 grid-cols-1 lg:grid-cols-[_1fr_300px_]'>
+              <div className='w-full grid gap-3 grid-cols-1 lg:grid-cols-[_1fr_300px_] py-3'>
                 {children}
               </div>
             </div>
