@@ -2,7 +2,8 @@ import { PostProps } from '@/types/types';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 // icons
-import { HiOutlineArrowPathRoundedSquare } from "react-icons/hi2";
+import { HiOutlineHeart, HiHeart, HiOutlineArrowPathRoundedSquare, HiOutlineChatBubbleOvalLeft, HiOutlineBookmark, HiPencil } from "react-icons/hi2";
+import { HiUpload } from "react-icons/hi";
 import { BsPerson, BsThreeDots } from 'react-icons/bs';
 import ResponsiveMenu from './ResponsiveMenu';
 
@@ -99,6 +100,55 @@ const Post = ({
               <span>{quotedPost?.content}</span>
             </Link>
           </>}
+          {/* estadisticas del post normal */}
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex justify-center items-center gap-2">
+              {/* like */}
+              <div className='flex justify-center items-center gap-0.5'>
+                <HiHeart />
+                <span>{likes.length}</span>
+              </div>
+              {/* comment */}
+              <div className='flex justify-center items-center gap-0.5'>
+                <HiOutlineChatBubbleOvalLeft />
+              </div>
+              {/* repost & quote */}
+              <div className='flex justify-center items-center gap-0.5'>
+                <ResponsiveMenu
+                  trigger={<button><HiOutlineArrowPathRoundedSquare /></button>}
+                  dropdownMenuOptions={{
+                    width: 200, // 300px
+                    canClickOtherElements: false
+                  }}
+                >
+                  {(menuOpen, setMenuOpen) => (
+                    <>
+                      <div
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="itemClass itemHover"
+                      >
+                        <HiOutlineArrowPathRoundedSquare size={20} />
+                        <span>Undo repost</span>
+                      </div>
+                      <div
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="itemClass itemHover"
+                      >
+                        <HiPencil size={20} />
+                        <span>Quote</span>
+                      </div>
+                    </>
+                  )}
+                </ResponsiveMenu>
+              </div>
+            </div>
+            <div className="flex justify-center items-center gap-2">
+              {/* bookmark */}
+              <HiOutlineBookmark />
+              {/* save */}
+              <HiUpload />
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -179,6 +229,54 @@ const Post = ({
               <span>{repostedFrom?.quotedPost?.content}</span>
             </Link>
           </>}
+          {/* estadisticas del post reposteado (el original) */}
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex justify-center items-center gap-2">
+              {/* like */}
+              <div className='flex justify-center items-center gap-0.5'>
+                <HiHeart />
+                <span>{repostedFrom?.likes.length}</span>
+              </div>
+              {/* comment */}
+              <div className='flex justify-center items-center gap-0.5'>
+                <HiOutlineChatBubbleOvalLeft />
+              </div>
+              {/* repost & quote */}
+              <div className='flex justify-center items-center gap-0.5'>
+                <ResponsiveMenu
+                  trigger={<button><HiOutlineArrowPathRoundedSquare /></button>}
+                  dropdownMenuOptions={{
+                    canClickOtherElements: false
+                  }}
+                >
+                  {(menuOpen, setMenuOpen) => (
+                    <>
+                      <div
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="itemClass itemHover"
+                      >
+                        <HiOutlineArrowPathRoundedSquare size={20} />
+                        <span>Undo repost from original</span>
+                      </div>
+                      <div
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="itemClass itemHover"
+                      >
+                        <HiPencil size={20} />
+                        <span>Quote</span>
+                      </div>
+                    </>
+                  )}
+                </ResponsiveMenu>
+              </div>
+            </div>
+            <div className="flex justify-center items-center gap-2">
+              {/* bookmark */}
+              <HiOutlineBookmark />
+              {/* save */}
+              <HiUpload />
+            </div>
+          </div>
         </div>
       </div>
     )
