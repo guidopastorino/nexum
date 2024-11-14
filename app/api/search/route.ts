@@ -48,21 +48,38 @@ export async function GET(req: Request) {
       .limit(limitInt)  // Limitar el número de posts por página
       .populate({
         path: 'creator',
-        select: 'profileImage fullname username',  // Obtener los datos del creador del post
+        select: '_id profileImage fullname username',
       })
-      .populate('repostedFrom', 'content')  // Obtener el contenido del post de donde se re-posteó
+      .populate({
+        path: 'repostedFrom',
+        select: '_id creator communityId feedId content tags likes media type comments views createdAt quotedPost',
+        populate: [
+          {
+            path: 'creator',
+            select: '_id profileImage fullname username'
+          },
+          {
+            path: 'quotedPost',
+            select: '_id creator content media createdAt',
+            populate: {
+              path: 'creator',
+              select: '_id profileImage fullname username'
+            }
+          }
+        ]
+      })
       .populate({
         path: 'quotedPost',
-        select: 'content media',  // Obtener el contenido y medios de los posts citados
+        select: 'creator content media createdAt',
+        populate: { path: 'creator', select: '_id profileImage fullname username' },
       })
       .populate({
         path: 'comments',
-        select: 'content createdAt',  // Obtener los comentarios (contenido y fecha de creación)
+        select: '_id content createdAt',
         model: 'Comment',
       })
-      .select('content media likes views type createdAt')  // Seleccionar las propiedades del post
-      .sort({ createdAt: -1 })  // Ordenar los posts por fecha de creación (más recientes primero)
-      .lean();  // Usar lean() para obtener documentos planos (más rápido y eficiente)
+      .select('content media likes views type createdAt communityId feedId tags')
+      .sort({ createdAt: -1 });
 
     // Calcular si hay una página siguiente
     const hasNextPage = userResults.length === limitInt || postResults.length === limitInt;
