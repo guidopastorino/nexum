@@ -99,19 +99,24 @@ const Post = ({
             <div className="flex justify-center items-center gap-2">
               {/* like */}
               <div className='flex justify-center items-center gap-0.5'>
-                <HiHeart />
+                <button className="postButton">
+                  <HiHeart />
+                </button>
                 <span>{likes.length}</span>
               </div>
               {/* comment */}
               <div className='flex justify-center items-center gap-0.5'>
-                <HiOutlineChatBubbleOvalLeft />
+                <button className="postButton">
+                  <HiOutlineChatBubbleOvalLeft />
+                </button>
+                <span>{comments.length}</span>
               </div>
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
                 <ResponsiveMenu
-                  trigger={<button><HiOutlineArrowPathRoundedSquare /></button>}
+                  trigger={<button className='postButton'><HiOutlineArrowPathRoundedSquare /></button>}
                   dropdownMenuOptions={{
-                    width: 200, // 300px
+                    width: 150,
                     canClickOtherElements: false
                   }}
                 >
@@ -122,7 +127,7 @@ const Post = ({
                         className="itemClass itemHover"
                       >
                         <HiOutlineArrowPathRoundedSquare size={20} />
-                        <span>Undo repost</span>
+                        <span>Repost</span>
                       </div>
                       <div
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -138,9 +143,9 @@ const Post = ({
             </div>
             <div className="flex justify-center items-center gap-2">
               {/* bookmark */}
-              <HiOutlineBookmark />
+              <button className="postButton"><HiOutlineBookmark /></button>
               {/* save */}
-              <HiUpload />
+              <button className="postButton"><HiUpload /></button>
             </div>
           </div>
         </div>
@@ -177,7 +182,7 @@ const Post = ({
               <ResponsiveMenu
                 trigger={<button className="text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8"><BsThreeDots /></button>}
                 dropdownMenuOptions={{
-                  width: 300, // 300px
+                  width: 300,
                   canClickOtherElements: false
                 }}
               >
@@ -224,18 +229,24 @@ const Post = ({
             <div className="flex justify-center items-center gap-2">
               {/* like */}
               <div className='flex justify-center items-center gap-0.5'>
-                <HiHeart />
+                <button className="postButton">
+                  <HiHeart />
+                </button>
                 <span>{repostedFrom?.likes.length}</span>
               </div>
               {/* comment */}
               <div className='flex justify-center items-center gap-0.5'>
-                <HiOutlineChatBubbleOvalLeft />
+                <button className="postButton">
+                  <HiOutlineChatBubbleOvalLeft />
+                </button>
+                <span>{repostedFrom?.comments.length}</span>
               </div>
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
                 <ResponsiveMenu
-                  trigger={<button><HiOutlineArrowPathRoundedSquare /></button>}
+                  trigger={<button className='postButton'><HiOutlineArrowPathRoundedSquare /></button>}
                   dropdownMenuOptions={{
+                    width: 150,
                     canClickOtherElements: false
                   }}
                 >
@@ -246,7 +257,7 @@ const Post = ({
                         className="itemClass itemHover"
                       >
                         <HiOutlineArrowPathRoundedSquare size={20} />
-                        <span>Undo repost from original</span>
+                        <span>Repost</span>
                       </div>
                       <div
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -262,9 +273,9 @@ const Post = ({
             </div>
             <div className="flex justify-center items-center gap-2">
               {/* bookmark */}
-              <HiOutlineBookmark />
+              <button className="postButton"><HiOutlineBookmark /></button>
               {/* save */}
-              <HiUpload />
+              <button className="postButton"><HiUpload /></button>
             </div>
           </div>
         </div>

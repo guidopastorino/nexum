@@ -48,13 +48,94 @@ export default mongoose.models.Post || mongoose.model<PostDocument>('Post', Post
   _id         	     Sí	            Sí             	Sí
   creator	           Sí            	Sí            	Sí
   communityId	       Sí	            Sí	            Sí
-  content	           Sí	            Sí             	Sí
-  tags	             Sí	            Sí            	Sí
-  likes       	     Sí            	Sí            	Sí
+  content	           Sí	            No             	Sí
+  tags	             Sí	            No            	Sí
+  likes       	     Sí            	No            	Sí
   repostedFrom	     No            	Sí            	No
   quotedPost  	     No            	No            	Sí
-  media       	     Sí	            Sí            	Sí
+  media       	     Sí	            No            	Sí
   type         	     Sí            	Sí	            Sí
-  comments     	     Sí            	Sí            	Sí
-  views     	       Sí            	Sí            	Sí
+  comments     	     Sí            	No            	Sí
+  views     	       Sí             No            	Sí
 */
+
+// Example of every type's creation in the database
+
+// normal
+// required fields:
+// creator (User schema _id), content (optional), media (optional), but at least, content or media.
+
+// db example:
+// {
+//   "_id": {
+//     "$oid": "67341d540cb38a56abea561a"
+//   },
+//   "creator": {
+//     "$oid": "67324efcc8e861029bbe1a8f"
+//   },
+//   "content": "Testeando los posts!!!!",
+//   "likes": [],
+//   "type": "normal",
+//   "comments": [],
+//   "views": 10,
+//   "media": [
+//     "https://utfs.io/f/L4TcJT5vSjNIzMgpzNShbpMj9WXPdiorO10ls6kTAtEJBN4R",
+//     "https://utfs.io/f/L4TcJT5vSjNIzMgpzNShbpMj9WXPdiorO10ls6kTAtEJBN4R"
+//   ],
+//   "createdAt": {
+//     "$date": "2024-11-12T23:58:16.885Z"
+//   }
+// }
+
+
+// quote
+// required fields:
+// creator (User schema _id), content or media, quotedPost (Post schema id)
+
+// db example:
+// {
+//   "_id": {
+//     "$oid": "67341dab0cb38a56abea561b"
+//   },
+//   "creator": {
+//     "$oid": "67324efcc8e861029bbe1a8f"
+//   },
+//   "content": "Jajajaja ahora testeando quotes!!!",
+//   "likes": [],
+//   "type": "quote",
+//   "quotedPost": {
+//     "$oid": "67341d540cb38a56abea561a"
+//   },
+//   "comments": [],
+//   "views": 15,
+//   "media": [],
+//   "createdAt": {
+//     "$date": "2024-11-12T23:59:17.552Z"
+//   }
+// }
+
+
+// repost
+// required fields:
+// creator (User schema _id), repostedFrom (Post schema id)
+
+// db example:
+// {
+//   "_id": {
+//     "$oid": "67341df20cb38a56abea561c"
+//   },
+//   "creator": {
+//     "$oid": "67324efcc8e861029bbe1a8f"
+//   },
+//   "content": "",
+//   "likes": [],
+//   "repostedFrom": {
+//     "$oid": "67341dab0cb38a56abea561b"
+//   },
+//   "type": "repost",
+//   "comments": [],
+//   "views": 0,
+//   "createdAt": {
+//     "$date": "2024-11-12T23:59:58.429Z"
+//   }
+// }

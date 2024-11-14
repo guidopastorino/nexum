@@ -23,3 +23,8 @@ button>* {
 .itemClass {
   @apply itemHover w-full px-4 py-3 text-lg md:text-sm md:px-3 md:py-2 flex justify-start items-center gap-3
 }
+
+/* post buttons */
+.postButton{
+  @apply text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8
+}
