@@ -23,7 +23,7 @@ const NavbarTop = () => {
 
   // Una vez cargada la sesión, mostramos los botones según la autenticación
   return (
-    <header className="h-12 bg-white dark:bg-neutral-800 border-b border-gray-300 dark:border-neutral-800 sticky z-50 top-0">
+    <header className="h-12 bg-white/70 dark:bg-neutral-800/70 border-b border-gray-300 dark:border-neutral-800 sticky z-50 top-0 backdrop-blur-sm">
       <div className="w-full h-full mx-auto max-w-screen-xl p-2 flex justify-between items-center gap-3">
         <Link href={"/"} className='shrink-0'>
           <img

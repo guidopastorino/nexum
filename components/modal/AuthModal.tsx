@@ -135,22 +135,57 @@ const LoginForm = ({ setShowRegister }: LoginFormProps) => {
 
 // 
 
-const registerValidationSchema = Yup.object({
-  fullname: Yup.string().required('El nombre completo es obligatorio'),
-  username: Yup.string().required('El usuario es obligatorio'),
-  email: Yup.string().email('Email no válido').required('El email es obligatorio'),
-  password: Yup.string().min(6, 'La contraseña debe tener al menos 6 caracteres').required('La contraseña es obligatoria'),
-});
+const registerValidationSchema = [
+  Yup.object({
+    fullname: Yup.string().required("El nombre completo es obligatorio"),
+    username: Yup.string().required("El usuario es obligatorio"),
+    email: Yup.string().email("Email no válido").required("El email es obligatorio"),
+    password: Yup.string()
+      .min(6, "La contraseña debe tener al menos 6 caracteres")
+      .required("La contraseña es obligatoria"),
+  }),
+  Yup.object({
+    verificationCode: Yup.string().required("El código de verificación es obligatorio"),
+  }),
+  Yup.object({}), // Sin validación para imágenes
+];
 
 type RegisterFormProps = {
   setShowRegister: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+// This is a multi-step form
 const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [currentStep, setCurrentStep] = useState<number>(0)
+
+  const steps: string[] = ["Information about you", "Email verification", "The final details...", "Review"];
+
+  const [formData, setFormData] = useState({
+    // step 1
+    fullname: "",
+    username: "",
+    email: "",
+    password: "",
+    // step 2
+    verificationCode: "",
+    // step 3
+    profileImage: null,
+    bannerImage: null,
+  });
+
+  const handleNext = (values: any) => {
+    setFormData((prev) => ({ ...prev, ...values }));
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const handleBack = () => setCurrentStep((prev) => prev - 1);
+
+  const isLastStep = currentStep === steps.length - 1;
 
   const { message, showMessage, visible } = useShowMessage()
 
+  // Final step data submittion
   const handleSubmit = async (values: { fullname: string; username: string; email: string; password: string }) => {
     setIsLoading(true);
     try {
@@ -165,7 +200,7 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
 
   return (
     <>
-      <p className="font-bold text-center text-2xl mb-4">Crear cuenta</p>
+      <p className="font-bold text-center text-2xl mb-4">{steps[currentStep]}</p>
       <Formik
         initialValues={{ fullname: '', username: '', email: '', password: '' }}
         validationSchema={registerValidationSchema}
@@ -230,7 +265,7 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
               <ErrorMessage name="password" component="p" className="text-red-500 text-sm" />
             </div>
             <button disabled={isLoading} type="submit" className="flex justify-center items-center w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none">
-              {!isLoading ? "Registrarse" : <Loader width={24} height={24} borderWidth={3} color='#fff' />}
+              {!isLoading ? "Siguiente" : <Loader width={24} height={24} borderWidth={3} color='#fff' />}
             </button>
           </Form>
         )}
@@ -242,6 +277,40 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
         Iniciar sesión
       </button>
       <Message visible={visible} message={message} />
+    </>
+  )
+}
+
+// Steps for multi-step form (4 total)
+
+const StepOne = () => {
+  return (
+    <>
+
+    </>
+  )
+}
+
+const StepTwo = () => {
+  return (
+    <>
+
+    </>
+  )
+}
+
+const StepThree = () => {
+  return (
+    <>
+
+    </>
+  )
+}
+
+const StepFour = () => {
+  return (
+    <>
+
     </>
   )
 }

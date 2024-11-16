@@ -8,7 +8,9 @@ import { WhoCanReplyPost } from '@/types/types'
 import React, { useState } from 'react'
 import { BiWorld } from 'react-icons/bi'
 import { IoAt } from "react-icons/io5";
+import { UploadButton } from "@/utils/uploadthing";
 import { MdOutlineCheck, MdOutlinePerson, MdOutlineVerified } from 'react-icons/md'
+import { BsInfo } from 'react-icons/bs'
 
 const page = () => {
   const { tab, changeTab } = useTabs()
@@ -105,13 +107,43 @@ const ContentTab = () => {
 
 const MediaTab = () => {
   return (
-    <></>
+    <>
+      <UploadButton
+        endpoint="imageUploader"
+        onClientUploadComplete={(res) => {
+          // Do something with the response
+          console.log("Files: ", res);
+          alert("Upload Completed");
+        }}
+        onUploadError={(error: Error) => {
+          // Do something with the error.
+          alert(`ERROR! ${error.message}`);
+        }}
+      />
+    </>
   )
 }
 
 const TagsTab = () => {
   return (
-    <></>
+    <>
+      <div className='flex justify-start items-center gap-2'>
+        <span>More about tags</span>
+        <ResponsiveMenu
+          dropdownMenuOptions={{
+            positionX: 'center',
+            width: 300
+          }}
+          trigger={<button className='w-6 h-6 flex justify-center items-center rounded-full border'><BsInfo /></button>}
+        >
+          {(menuOpen, setMenuOpen) => (
+            <div className='p-2 text-lg'>
+              Tags will help your post to be shown in feeds to people with similar interests. More tags more chance to appear frequently in the feed!!
+            </div>
+          )}
+        </ResponsiveMenu>
+      </div>
+    </>
   )
 }
 
