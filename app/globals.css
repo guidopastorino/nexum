@@ -12,16 +12,14 @@ button>* {
   pointer-events: none;
 }
 
-/*  */
-
 /* used for causal items hovering */
 .itemHover {
-  @apply bg-white dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700/50 active:bg-gray-200 dark:active:bg-neutral-600/50 duration-100 cursor-pointer whitespace-nowrap;
+  @apply md:hover:bg-gray-100 md:dark:hover:bg-neutral-700/50 active:bg-gray-200 dark:active:bg-neutral-600/50 duration-100 cursor-pointer whitespace-nowrap;
 }
 
-/* used for dropdown menu items */
+/* used for dropdown menu items (here we apply the background) */
 .itemClass {
-  @apply itemHover w-full px-4 py-3 text-lg md:text-sm md:px-3 md:py-2 flex justify-start items-center gap-3
+  @apply itemHover w-full px-4 py-3 text-lg md:text-sm md:px-3 md:py-2 flex justify-start items-center gap-3 bg-white dark:bg-neutral-800
 }
 
 /* post buttons */
@@ -37,4 +35,9 @@ button>* {
 .activeTab::after {
   content: "";
   @apply absolute bottom-0 h-[2.5px] rounded-full w-full left-0 z-30 bg-orange-600
+}
+
+/* form input */
+.formInput {
+  @apply w-full block p-2 border dark:border-neutral-700 outline-none hover:border-black dark:hover:border-neutral-600 focus:border-black dark:focus:border-neutral-500 focus-visible:border-black dark:focus-visible:border-neutral-700 text-base;
 }

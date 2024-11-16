@@ -46,7 +46,7 @@ const ResponsiveMenu = ({ trigger, dropdownMenuOptions, children }: ResponsiveMe
           setOpen={setMenuOpen}
         >
           <div
-            className={`dark:bg-neutral-800 rounded-lg overflow-hidden select-none py-1 border dark:border-neutral-600/15 ${dropdownMenuOptions?.width ? 'w-auto' : 'w-max'
+            className={`bg-white dark:bg-neutral-800 rounded-lg overflow-hidden select-none py-1 border dark:border-neutral-600/15 ${dropdownMenuOptions?.width ? 'w-auto' : 'w-max'
               }`}
             style={dropdownMenuOptions?.width ? { width: `${dropdownMenuOptions.width}px` } : undefined}
           >
