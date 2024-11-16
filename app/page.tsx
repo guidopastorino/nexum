@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import Post from '@/components/Post';
 import { PostProps } from '@/types/types';
@@ -23,24 +23,8 @@ const PostsList = () => {
   } = useInfiniteScroll<PostProps>({
     queryKey: ['posts'],
     fetcher: fetchPosts,
-    pageSize: 5
+    pageSize: 5,
   });
-
-  // Función de scroll infinito
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 500 &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
-        fetchNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (isLoading) return <div className='flex justify-center items-center p-3'><Loader width={30} height={30} /></div>;
   if (isError) return <p>Error al cargar los posts: {error instanceof Error ? error.message : "Error al cargar los posts"}</p>;

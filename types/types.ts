@@ -58,7 +58,7 @@ export type SearchResultsResponse = {
   };
 };
 
-// post
+// --------- POST ----------
 export interface PostMedia {
   type: 'image' | 'video';
   filename: string;
@@ -66,6 +66,8 @@ export interface PostMedia {
   src: string;
   // ...
 }
+
+export type WhoCanReplyPost = 'Everyone' | 'Accounts you follow' | 'Verified accounts' | 'Only accounts you mention';
 
 // añadir props del post quoteado
 // como se almacena en la db es diferente a las props o a como se devuelve en el server

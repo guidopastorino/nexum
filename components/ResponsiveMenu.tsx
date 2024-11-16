@@ -19,6 +19,8 @@ type ResponsiveMenuProps = {
   dropdownMenuOptions?: {
     width?: number;
     canClickOtherElements?: boolean;
+    positionX?: 'left' | 'center' | 'right';
+    positionY?: 'top' | 'bottom';
   };
   children: (
     menuOpen: boolean,
@@ -37,7 +39,8 @@ const ResponsiveMenu = ({ trigger, dropdownMenuOptions, children }: ResponsiveMe
         // Dropdown menu para pantallas grandes
         <DropdownMenu
           trigger={trigger}
-          positionX='right'
+          positionX={dropdownMenuOptions?.positionX || 'right'}
+          positionY={dropdownMenuOptions?.positionY || 'bottom'}
           canClickOtherElements={dropdownMenuOptions?.canClickOtherElements ?? true}
           isOpen={menuOpen}
           setOpen={setMenuOpen}

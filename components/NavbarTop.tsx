@@ -67,6 +67,9 @@ const ProfileOptionsMenu = () => {
   return (
     <LoggedIn>
       <ResponsiveMenu
+        dropdownMenuOptions={{
+          width: 130
+        }}
         trigger={
           <button className='w-9 h-9 rounded-full overflow-hidden flex justify-center items-center text-lg itemHover'>
             <img src={user.profileImage || "/default_pfp.jpg"} className='w-full h-full object-cover' />
