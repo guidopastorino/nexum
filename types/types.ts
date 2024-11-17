@@ -121,9 +121,9 @@ export interface PostProps {
       createdAt: Date;
     };
     media: MediaFile[],
-    createdAt: Date,
     likes: string[],
     comments: string[],
+    createdAt: Date,
   };
   quotedPost?: {
     _id: string;

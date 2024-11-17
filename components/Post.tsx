@@ -179,7 +179,7 @@ const Post = ({
               <span className='text-lg whitespace-normal truncate line-clamp-1'>{repostedFrom?.creator.fullname}</span>
               <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{repostedFrom?.creator.username}</span>
               <span>·</span>
-              <span>{timeAgo(createdAt)}</span>
+              <span>{timeAgo(repostedFrom?.createdAt as Date)}</span> {/* */}
             </div>
             {/* options btn */}
             <div>

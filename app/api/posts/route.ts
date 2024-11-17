@@ -24,7 +24,7 @@ export async function GET(req: Request) {
       })
       .populate({
         path: 'repostedFrom',
-        select: '_id maskedId creator communityId feedId content likes media type comments createdAt quotedPost',
+        select: '_id maskedId creator communityId feedId content likes media type comments quotedPost createdAt',
         populate: [
           {
             path: 'creator',
