@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-hover-card": "^1.1.2",
     "@reduxjs/toolkit": "^2.3.0",
     "@uploadthing/react": "^7.1.1",
     "bcrypt": "^5.1.1",

@@ -32,14 +32,14 @@
 ## 3. Posts
 
 - POST /api/posts: Crea un nuevo post.
-  - json: { content, files, tags, userId }
+  - json: { content, files, userId }
 
 - GET /api/posts/:id: Obtiene un post específico.
   - Params: id (ID del post)
 
 - PUT /api/posts/:id: Edita un post existente.
   - Params: id (ID del post)
-  - json: { content, files, tags }
+  - json: { content, files }
 
 - DELETE /api/posts/:id: Elimina un post.
   - Params: id (ID del post)
@@ -121,5 +121,3 @@ Cada ruta puede usar tecnologías específicas que ya discutimos, como:
 - Actualizaciones en Tiempo Real: WebSockets (o librerías como Socket.IO) para notificaciones y mensajes.
 - IA y Machine Learning: Modelos NLP para la generación de etiquetas automáticas y recomendadores.
 - Manejo de Archivos: Almacenamiento en la nube (S3 o GCP) para archivos de multimedia en posts y moments.
-
-Con esta lista de rutas e infraestructura, tendrás una base sólida para implementar y escalar "Nexum" con todas las características avanzadas que necesitas.

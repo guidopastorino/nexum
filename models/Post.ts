@@ -1,33 +1,51 @@
+import { MediaFile } from '@/types/types';
 import mongoose, { Schema, model, Types, Document } from 'mongoose';
+
+// Subesquema para ServerData
+const ServerDataSchema = new Schema({
+  uploadedBy: { type: String, required: true },
+});
+
+// Subesquema para MediaFile
+const MediaFileSchema = new Schema({
+  name: { type: String, required: true },
+  size: { type: Number, required: true },
+  key: { type: String, required: true },
+  lastModified: { type: Number, required: true },
+  serverData: { type: ServerDataSchema, required: true },
+  url: { type: String, required: true },
+  appUrl: { type: String, required: true },
+  customId: { type: String, default: null },
+  type: { type: String, required: true },
+  fileHash: { type: String, required: true },
+});
 
 interface PostDocument extends Document {
   _id: string;
+  maskedId: string;
   creator: Types.ObjectId;
   communityId?: Types.ObjectId;
   content: string;
-  tags?: string[];
   likes: Types.ObjectId[];
   repostedFrom?: Types.ObjectId;
   quotedPost?: Types.ObjectId;
-  media?: string[];
-  type: 'normal' | 'repost' | 'quote';
+  media: MediaFile[];
+  type: 'normal' | 'repost' | 'quote'; // add reply option
   comments: Types.ObjectId[];
-  views: number;
 }
 
 const PostSchema = new Schema<PostDocument>(
   {
     creator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    maskedId: { type: String, required: true, unique: true },
     communityId: { type: Schema.Types.ObjectId, ref: 'Community' },
-    content: { type: String, required: true },
-    tags: { type: [String] },
+    content: { type: String },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     repostedFrom: { type: Schema.Types.ObjectId, ref: 'Post' },
     quotedPost: { type: Schema.Types.ObjectId, ref: 'Post' },
-    media: [{ type: String }],
+    media: { type: [MediaFileSchema], default: [] },
     type: { type: String, enum: ['normal', 'repost', 'quote'], default: 'normal' },
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
-    views: { type: Number, default: 0 },
   },
   {
     timestamps: true,
@@ -35,8 +53,7 @@ const PostSchema = new Schema<PostDocument>(
 );
 
 // Creación de índices
-PostSchema.index({ content: 'text' }); // Mantener índice de texto solo para content
-// PostSchema.index({ tags: 1 }); // Índice estándar para tags
+PostSchema.index({ content: 'text' }, { weights: { content: 1 } });
 PostSchema.index({ communityId: 1, createdAt: -1 });
 PostSchema.index({ creator: 1, createdAt: -1 });
 
@@ -49,14 +66,12 @@ export default mongoose.models.Post || mongoose.model<PostDocument>('Post', Post
   creator	           Sí            	Sí            	Sí
   communityId	       Sí	            Sí	            Sí
   content	           Sí	            No             	Sí
-  tags	             Sí	            No            	Sí
   likes       	     Sí            	No            	Sí
   repostedFrom	     No            	Sí            	No
   quotedPost  	     No            	No            	Sí
   media       	     Sí	            No            	Sí
   type         	     Sí            	Sí	            Sí
   comments     	     Sí            	No            	Sí
-  views     	       Sí             No            	Sí
 */
 
 // Example of every type's creation in the database
@@ -77,7 +92,6 @@ export default mongoose.models.Post || mongoose.model<PostDocument>('Post', Post
 //   "likes": [],
 //   "type": "normal",
 //   "comments": [],
-//   "views": 10,
 //   "media": [
 //     "https://utfs.io/f/L4TcJT5vSjNIzMgpzNShbpMj9WXPdiorO10ls6kTAtEJBN4R",
 //     "https://utfs.io/f/L4TcJT5vSjNIzMgpzNShbpMj9WXPdiorO10ls6kTAtEJBN4R"
@@ -107,7 +121,6 @@ export default mongoose.models.Post || mongoose.model<PostDocument>('Post', Post
 //     "$oid": "67341d540cb38a56abea561a"
 //   },
 //   "comments": [],
-//   "views": 15,
 //   "media": [],
 //   "createdAt": {
 //     "$date": "2024-11-12T23:59:17.552Z"
@@ -134,7 +147,6 @@ export default mongoose.models.Post || mongoose.model<PostDocument>('Post', Post
 //   },
 //   "type": "repost",
 //   "comments": [],
-//   "views": 0,
 //   "createdAt": {
 //     "$date": "2024-11-12T23:59:58.429Z"
 //   }

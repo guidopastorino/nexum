@@ -1,9 +1,10 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt'
 
 interface IUser extends Document {
   fullname: string;
   username: string;
+  isVerified: string;
   email: string;
   password: string;
   profileImage: string | null;
@@ -25,6 +26,10 @@ const UserSchema: Schema = new Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
     email: {
       type: String,
@@ -71,8 +76,9 @@ UserSchema.methods.comparePassword = async function (password: string): Promise<
 };
 
 // Indices para mejorar consultas de seguidores y seguidos
-UserSchema.index({ username: 1 });
+UserSchema.index({ username: 1, email: 1 });
 UserSchema.index({ email: 1 });
+UserSchema.index({ isVerified: 1 });
 
 const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 

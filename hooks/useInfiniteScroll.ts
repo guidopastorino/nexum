@@ -31,6 +31,7 @@ function useInfiniteScroll<T>({
     ({ pageParam = 1 }) => fetcher(pageParam, pageSize),
     {
       staleTime,
+      refetchOnWindowFocus: true,
       getNextPageParam: (lastPage, allPages) => {
         return lastPage.length < pageSize ? undefined : allPages.length + 1;
       },

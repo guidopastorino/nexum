@@ -3,6 +3,7 @@ export interface UserState {
   _id: string | null;
   fullname: string | null;
   username: string | null;
+  isVerified: boolean | null;
   email: string | null;
   profileImage: string | null;
   createdAt: string | null;
@@ -14,6 +15,7 @@ export interface IUser {
   _id: string;
   fullname: string;
   username: string;
+  isVerified: boolean;
   email: string;
   profileImage: string | null;
   createdAt: Date;
@@ -59,13 +61,23 @@ export type SearchResultsResponse = {
 };
 
 // --------- POST ----------
-export interface PostMedia {
-  type: 'image' | 'video';
-  filename: string;
-  extension: string;
-  src: string;
-  // ...
-}
+// Post Media
+type ServerData = {
+  uploadedBy: string;
+};
+
+export type MediaFile = {
+  name: string;
+  size: number; // Tamaño en bytes
+  key: string; // Identificador único
+  lastModified: number;
+  serverData: ServerData; // Datos del servidor relacionados al archivo
+  url: string; // URL para acceder al archivo
+  appUrl: string; // URL específica de la aplicación
+  customId: string | null; // ID personalizado (opcional)
+  type: string; // Tipo MIME (por ejemplo, "image/png", "video/mp4"). Sirve para identificar qué tipo es el media
+  fileHash: string;
+};
 
 export type WhoCanReplyPost = 'Everyone' | 'Accounts you follow' | 'Verified accounts' | 'Only accounts you mention';
 
@@ -74,6 +86,7 @@ export type WhoCanReplyPost = 'Everyone' | 'Accounts you follow' | 'Verified acc
 // Interfaz de props para el componente Post
 export interface PostProps {
   _id: string;
+  maskedId: string;
   creator: {
     _id: string;
     profileImage: string;
@@ -83,10 +96,10 @@ export interface PostProps {
   communityId?: string;
   feedId?: string;
   content: string;
-  tags?: string[];
   likes: string[]; // Aquí se mostrarán los likes del post original cuando sea repost
   repostedFrom?: {
     _id: string,
+    maskedId: string;
     creator: {
       _id: string,
       fullname: string,
@@ -96,6 +109,7 @@ export interface PostProps {
     content: string,
     quotedPost?: {
       _id: string;
+      maskedId: string;
       creator: {
         _id: string;
         profileImage: string;
@@ -103,16 +117,17 @@ export interface PostProps {
         username: string;
       };
       content: string;
-      media: string[];
+      media: MediaFile[];
       createdAt: Date;
     };
-    media: string[],
+    media: MediaFile[],
     createdAt: Date,
     likes: string[],
     comments: string[],
   };
   quotedPost?: {
     _id: string;
+    maskedId: string;
     creator: {
       _id: string;
       profileImage: string;
@@ -120,13 +135,12 @@ export interface PostProps {
       username: string;
     };
     content: string;
-    media: string[];
+    media: MediaFile[];
     createdAt: Date;
   };
-  media?: string[];
+  media: MediaFile[];
   type: 'normal' | 'repost' | 'quote';
-  comments: string[]; // Los comentarios son los del post original
-  views?: number;
+  comments: string[];
   createdAt: Date;
 }
 

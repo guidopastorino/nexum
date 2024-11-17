@@ -1,44 +1,46 @@
-import { PostProps } from '@/types/types';
+import { MediaFile, PostProps } from '@/types/types';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
 // icons
-import { HiOutlineHeart, HiHeart, HiOutlineArrowPathRoundedSquare, HiOutlineChatBubbleOvalLeft, HiOutlineBookmark, HiPencil } from "react-icons/hi2";
+import { HiHeart, HiOutlineArrowPathRoundedSquare, HiOutlineChatBubbleOvalLeft, HiOutlineBookmark, HiPencil } from "react-icons/hi2";
 import { HiUpload } from "react-icons/hi";
 import { BsPerson, BsThreeDots } from 'react-icons/bs';
 import ResponsiveMenu from './ResponsiveMenu';
+import UserDetailsProfileCard from './UserDetailsProfileCard';
+import { isImage } from '@/utils/detectFileType';
 
 // Recibe los datos del post como props
 const Post = ({
   _id,
+  maskedId,
   creator,
   communityId,
   feedId,
   content,
-  tags,
   likes,
   repostedFrom,
   quotedPost,
   media,
   type,
   comments,
-  views,
   createdAt
 }: PostProps) => {
-  const timeAgo = formatTimeAgo(new Date(createdAt));
-  // renderiza el contenido del post normal
+  const timeAgo = (time: Date) => formatTimeAgo(new Date(time));
+
   const NormalPost = () => {
     return (
       <div className="flex justify-center items-start gap-2">
         {/* creator profile image */}
-        <div className='self-start shrink-0'>
-          <Link href={`/${creator.username}`}>
-            <img
-              className='w-10 h-10 object-cover overflow-hidden rounded-full'
-              src={creator.profileImage}
-              alt={`${creator.fullname}'s profile image`}
-            />
-          </Link>
-        </div>
+        <UserDetailsProfileCard creatorId={creator._id}>
+          <div className='self-start shrink-0'>
+            <Link href={`/${creator.username}`}>
+              <img
+                className='w-10 h-10 object-cover overflow-hidden rounded-full'
+                src={creator.profileImage}
+                alt={`${creator.fullname}'s profile image`}
+              />
+            </Link>
+          </div>
+        </UserDetailsProfileCard>
         {/* post content */}
         <div className='flex justify-start items-stretch gap-2 flex-col w-full flex-1'>
           {/* creator info and post date + options btn */}
@@ -47,7 +49,7 @@ const Post = ({
               <span className='text-lg whitespace-normal truncate line-clamp-1'>{creator.fullname}</span>
               <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{creator.username}</span>
               <span>·</span>
-              <span>{timeAgo}</span>
+              <span>{timeAgo(createdAt)}</span>
             </div>
             {/* options btn */}
             <div>
@@ -81,14 +83,14 @@ const Post = ({
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
           {type === 'quote' && quotedPost?._id && <>
-            <Link href={"/post/123"} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-800 bg-white dark:border-neutral-700">
+            <Link href={`/post/${quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-800 bg-white dark:border-neutral-700">
               {/* creator info and post date + options btn */}
               <div className='flex justify-start items-center gap-1'>
                 <img className='w-8 h-8 object-cover rounded-full overflow-hidden' src={quotedPost.creator.profileImage} alt={`${quotedPost.creator.fullname}'s profile image`} />
                 <span className='text-lg whitespace-normal truncate line-clamp-1'>{quotedPost.creator.fullname}</span>
                 <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{quotedPost.creator.username}</span>
                 <span>·</span>
-                <span>{timeAgo}</span>
+                <span>{timeAgo(quotedPost.createdAt)}</span>
               </div>
               <span>{quotedPost?.content}</span>
               <MediaGallery media={quotedPost?.media ?? []} />
@@ -158,15 +160,17 @@ const Post = ({
     return (
       <div className="flex justify-center items-start gap-2">
         {/* creator profile image */}
-        <div className='self-start shrink-0'>
-          <Link href={`/${repostedFrom?.creator.username}`}>
-            <img
-              className='w-10 h-10 object-cover overflow-hidden rounded-full'
-              src={repostedFrom?.creator.profileImage}
-              alt={`${repostedFrom?.creator.fullname}'s profile image`}
-            />
-          </Link>
-        </div>
+        <UserDetailsProfileCard creatorId={creator._id}>
+          <div className='self-start shrink-0'>
+            <Link href={`/${repostedFrom?.creator.username}`}>
+              <img
+                className='w-10 h-10 object-cover overflow-hidden rounded-full'
+                src={repostedFrom?.creator.profileImage}
+                alt={`${repostedFrom?.creator.fullname}'s profile image`}
+              />
+            </Link>
+          </div>
+        </UserDetailsProfileCard>
         {/* post content */}
         <div className='flex justify-start items-stretch gap-2 flex-col w-full flex-1'>
           {/* creator info and post date + options btn */}
@@ -175,7 +179,7 @@ const Post = ({
               <span className='text-lg whitespace-normal truncate line-clamp-1'>{repostedFrom?.creator.fullname}</span>
               <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{repostedFrom?.creator.username}</span>
               <span>·</span>
-              <span>{timeAgo}</span>
+              <span>{timeAgo(createdAt)}</span>
             </div>
             {/* options btn */}
             <div>
@@ -209,14 +213,14 @@ const Post = ({
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
           {repostedFrom?.quotedPost && repostedFrom?.quotedPost?._id && <>
-            <Link href={"/post/123"} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-800 bg-white dark:border-neutral-700">
+            <Link href={`/post/${repostedFrom?.quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-800 bg-white dark:border-neutral-700">
               {/* creator info and post date + options btn */}
               <div className='flex justify-start items-center gap-1'>
                 <img className='w-8 h-8 object-cover rounded-full overflow-hidden' src={repostedFrom?.quotedPost.creator.profileImage} alt={`${repostedFrom?.quotedPost.creator.fullname}'s profile image`} />
                 <span className='text-lg whitespace-normal truncate line-clamp-1'>{repostedFrom?.quotedPost.creator.fullname}</span>
                 <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{repostedFrom?.quotedPost.creator.username}</span>
                 <span>·</span>
-                <span>{timeAgo}</span>
+                <span>{timeAgo(repostedFrom?.quotedPost.createdAt)}</span>
               </div>
               {/* reposted quoted post content */}
               <span>{repostedFrom?.quotedPost?.content}</span>
@@ -322,35 +326,36 @@ function formatTimeAgo(date: Date) {
 /* for now it will be string[] and images */
 
 
-const MediaGallery = ({ media }: { media: string[] }) => {
+const MediaGallery = ({ media }: { media: MediaFile[] }) => {
   const displayMedia = media.slice(0, 4); // Solo mostramos hasta las primeras 4 imágenes
   const extraCount = media.length - 4; // Cantidad de imágenes extra
-  
+
   return (
     <div
-      className={`grid gap-2 ${
-        media.length === 1
-          ? 'grid-cols-1'
-          : media.length === 2
+      className={`grid gap-2 ${media.length === 1
+        ? 'grid-cols-1'
+        : media.length === 2
           ? 'grid-cols-2'
           : media.length === 3
-          ? 'grid-cols-3 grid-rows-2'
-          : 'grid-cols-2'
-      }`}
+            ? 'grid-cols-3 grid-rows-2'
+            : 'grid-cols-2'
+        }`}
     >
-      {displayMedia.map((url, i) => (
+      {displayMedia.map((file: MediaFile, i: number) => (
         <div
           key={i}
-          className={`relative overflow-hidden rounded-lg ${
-            media.length === 3
-              ? i === 0
-                ? 'col-span-2 row-span-2' // Primera imagen ocupa la mitad izquierda
-                : 'col-span-1' // Las otras dos ocupan la mitad derecha
-              : ''
-          }`}
+          className={`relative overflow-hidden rounded-lg ${media.length === 3
+            ? i === 0
+              ? 'col-span-2 row-span-2' // Primer archivo ocupa la mitad izquierda
+              : 'col-span-1' // Los otros dos ocupan la mitad derecha
+            : ''
+            }`}
         >
-          <img src={url} alt={`media-${i}`} className="w-full h-full object-cover" />
-          
+          {isImage(file)
+            ? <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+            : <video src={file.url} controls className="w-full h-full object-cover"></video>
+          }
+
           {/* Mostrar el overlay "+n" en la última imagen si hay más de 4 */}
           {i === 3 && extraCount > 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-2xl font-bold">
@@ -362,54 +367,3 @@ const MediaGallery = ({ media }: { media: string[] }) => {
     </div>
   );
 };
-
-// for perfect splitting
-
-// const MediaGallery = ({ media }: { media: string[] }) => {
-//   const displayMedia = media.slice(0, 4); // Mostramos hasta las primeras 4 imágenes
-//   const extraCount = media.length - 4; // Cantidad de imágenes extra
-  
-//   return (
-//     <div
-//       className={`grid gap-2 ${
-//         media.length === 1
-//           ? 'grid-cols-1'
-//           : media.length === 2
-//           ? 'grid-cols-2'
-//           : media.length === 3
-//           ? 'grid-cols-2 grid-rows-2'
-//           : 'grid-cols-2'
-//       }`}
-//       style={{
-//         gridTemplateAreas: media.length === 3 ? "'a b' 'a c'" : '',
-//         gridTemplateColumns: media.length === 3 ? '1fr 1fr' : '',
-//         gridTemplateRows: media.length === 3 ? '1fr 1fr' : ''
-//       }}
-//     >
-//       {displayMedia.map((url, i) => (
-//         <div
-//           key={i}
-//           className={`relative overflow-hidden rounded-lg ${
-//             media.length === 3
-//               ? i === 0
-//                 ? 'col-span-1 row-span-2 h-full' // Primera imagen ocupa la mitad izquierda
-//                 : 'col-span-1 h-full' // Las otras dos ocupan la mitad derecha
-//               : ''
-//           }`}
-//           style={{
-//             gridArea: media.length === 3 && i === 0 ? 'a' : media.length === 3 && i === 1 ? 'b' : media.length === 3 && i === 2 ? 'c' : ''
-//           }}
-//         >
-//           <img src={url} alt={`media-${i}`} className="w-full h-full object-cover" />
-          
-//           {/* Mostrar el overlay "+n" en la última imagen si hay más de 4 */}
-//           {i === 3 && extraCount > 0 && (
-//             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-2xl font-bold">
-//               +{extraCount}
-//             </div>
-//           )}
-//         </div>
-//       ))}
-//     </div>
-//   );
-// };

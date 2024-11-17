@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       })
       .populate({
         path: 'repostedFrom',
-        select: '_id creator communityId feedId content tags likes media type comments views createdAt quotedPost',
+        select: '_id creator communityId feedId content likes media type comments createdAt quotedPost',
         populate: [
           {
             path: 'creator',
@@ -78,7 +78,7 @@ export async function GET(req: Request) {
         select: '_id content createdAt',
         model: 'Comment',
       })
-      .select('content media likes views type createdAt communityId feedId tags')
+      .select('content media likes type createdAt communityId feedId')
       .sort({ createdAt: -1 });
 
     // Calcular si hay una página siguiente

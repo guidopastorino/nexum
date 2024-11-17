@@ -50,7 +50,6 @@ const page = () => {
       <div className='flex justify-start items-center gap-2 mt-3 overflow-x-auto'>
         <div onClick={() => changeTab(1)} className={`${tab == 1 ? "activeTab" : ""} p-3 itemHover select-none`}>Content</div>
         <div onClick={() => changeTab(2)} className={`${tab == 2 ? "activeTab" : ""} p-3 itemHover select-none`}>Media</div>
-        <div onClick={() => changeTab(3)} className={`${tab == 3 ? "activeTab" : ""} p-3 itemHover select-none`}>Tags</div>
         <div onClick={() => changeTab(4)} className={`${tab == 4 ? "activeTab" : ""} p-3 itemHover select-none`}>Poll</div>
         <div onClick={() => changeTab(5)} className={`${tab == 5 ? "activeTab" : ""} p-3 itemHover select-none`}>Schedule post</div>
         <div onClick={() => changeTab(6)} className={`${tab == 6 ? "activeTab" : ""} p-3 itemHover select-none`}>More options</div>
@@ -58,7 +57,6 @@ const page = () => {
       {/* renders */}
       {tab === 1 && <ContentTab />}
       {tab === 2 && <MediaTab />}
-      {tab === 3 && <TagsTab />}
       {tab === 4 && <PollTab />}
       {tab === 5 && <SchedulePostTab />}
       {tab === 6 && <MoreOptionsTab />}
@@ -120,64 +118,6 @@ const MediaTab = () => {
           alert(`ERROR! ${error.message}`);
         }}
       />
-    </>
-  )
-}
-
-const TagsTab = () => {
-  const [tags, setTags] = useState<string[]>([])
-
-  useEffect(() => console.log(tags), [tags])
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const form = e.target as HTMLFormElement;
-
-    const tag = form.tag.value;
-
-    setTags((prevTags) => {
-      if (!prevTags.includes(tag)) {
-        return [...prevTags, tag];
-      }
-      return prevTags;
-    });
-
-    form.reset();
-  };
-
-
-  return (
-    <>
-      <div className='flex flex-col justify-start items-start gap-2 mt-2'>
-        <div className="flex justify-start items-center gap-2">
-          <span>More about tags</span>
-          <ResponsiveMenu
-            dropdownMenuOptions={{
-              positionX: 'center',
-              width: 300
-            }}
-            trigger={<button className='w-6 h-6 flex justify-center items-center rounded-full border'><BsInfo /></button>}
-          >
-            {(menuOpen, setMenuOpen) => (
-              <div className='p-3 text-lg bg-white dark:bg-neutral-800'>
-                Tags will help your post to be shown in feeds to people with similar interests. More tags more chance to appear frequently in the feed!!
-              </div>
-            )}
-          </ResponsiveMenu>
-        </div>
-        <div className="mt-2 w-full">
-          {/* tags */}
-          {!tags.length && <div>No tags added</div>}
-          {!!tags.length && tags.map((tag, i) => (
-            <div key={i}>{tag}</div>
-          ))}
-          {/* input */}
-          <form onSubmit={handleSubmit}>
-            <input className='formInput' name='tag' type="text" placeholder='Add tag' />
-          </form>
-        </div>
-      </div>
     </>
   )
 }

@@ -54,6 +54,8 @@ const handler = NextAuth({
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 días
+    updateAge: 24 * 60 * 60, // Actualizar la sesión cada 24 horas
   },
   pages: {
     signIn: "/"
@@ -105,7 +107,18 @@ const handler = NextAuth({
       }
       return true;
     },
-  }
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Solo en producción usar HTTPS
+        sameSite: "lax", // "lax" permite el uso de cookies en solicitudes cruzadas
+        path: "/",
+      },
+    },
+  },
 });
 
 export { handler as GET, handler as POST };

@@ -2,7 +2,6 @@
 import User from "@/models/User";
 import dbConnect from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
-import bcrypt from 'bcrypt'
 
 export async function POST(req: Request, res: Response) {
   try {
