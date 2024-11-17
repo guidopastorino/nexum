@@ -6,6 +6,7 @@ import Post from '@/components/Post';
 import { PostProps } from '@/types/types';
 import ky from 'ky';
 import Loader from '@/components/Loader';
+import PostSkeleton from '@/components/PostSkeleton';
 
 const fetchPosts = async (page: number, pageSize: number): Promise<PostProps[]> => {
   return await ky.get(`/api/posts?page=${page}&pageSize=${pageSize}`).json();
@@ -26,7 +27,13 @@ const PostsList = () => {
     pageSize: 5,
   });
 
-  if (isLoading) return <div className='flex justify-center items-center p-3'><Loader width={30} height={30} /></div>;
+  if (isLoading) return <div className='w-full flex flex-col justify-start items-start gap-3'>
+    {Array.from({ length: 10 }).map((_, i) => (
+      <PostSkeleton />
+    ))}
+  </div>;
+
+
   if (isError) return <p>Error al cargar los posts: {error instanceof Error ? error.message : "Error al cargar los posts"}</p>;
 
   return (
