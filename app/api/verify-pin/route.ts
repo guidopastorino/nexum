@@ -1,10 +1,12 @@
+import dbConnect from "@/lib/dbConnect";
 import EmailVerificationPin from "@/models/EmailVerificationPin";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Response) {
   try {
+    await dbConnect()
+
     const { email, pin } = await req.json();
-    console.log({ email, pin })
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });

@@ -1,3 +1,4 @@
+import dbConnect from "@/lib/dbConnect";
 import Post from "@/models/Post";
 import { NextResponse } from "next/server";
 
@@ -6,6 +7,8 @@ import { NextResponse } from "next/server";
 // 'id' es el maskedId del post (por ahora, sino se buscará por su _id)
 export async function GET(req: Request, { params }: { params: { id: string } }, res: Response) {
   try {
+    await dbConnect()
+
     const { id } = params
 
     const post = await Post.findOne({ maskedId: id })

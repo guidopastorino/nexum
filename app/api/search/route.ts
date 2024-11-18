@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    await dbConnect(); // Conectar a la base de datos
+    await dbConnect();
 
     // Convertir limit y page a enteros
     const limitInt = parseInt(limit, 10);
