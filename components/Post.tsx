@@ -160,7 +160,7 @@ const Post = ({
     return (
       <div className="flex justify-center items-start gap-2">
         {/* creator profile image */}
-        <UserDetailsProfileCard creatorId={creator._id}>
+        <UserDetailsProfileCard creatorId={repostedFrom?.creator._id as string}>
           <div className='self-start shrink-0'>
             <Link href={`/${repostedFrom?.creator.username}`}>
               <img
