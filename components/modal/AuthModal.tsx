@@ -11,6 +11,7 @@ import { createUser } from '@/utils/fetchFunctions';
 import Message from '../Message';
 import ShowPasswordInput from '../ShowPasswordInput';
 import ky from 'ky';
+import PostSkeleton from '../PostSkeleton';
 
 type AuthModalProps = {
   buttonTrigger: React.ReactElement<any, any>;
@@ -162,6 +163,8 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
   const [currentStep, setCurrentStep] = useState<number>(0) // 0, ..., 3 (where 3 is the final step (user registration))
   const steps: string[] = ["Information about you", "Email verification", "The final details...", "Review"];
 
+  const [emailVerified, setEmailVerified] = useState<boolean>(false)
+
   const { message, showMessage, visible } = useShowMessage()
 
   const [formData, setFormData] = useState<{
@@ -182,7 +185,8 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
     bannerImage: null,
   });
 
-  const [emailVerified, setEmailVerified] = useState<boolean>(false)
+  useEffect(() => console.log(formData), [formData])
+  useEffect(() => console.log(currentStep), [currentStep])
 
   const handleNext = (values: any) => {
     setFormData((prev) => ({ ...prev, ...values }));
@@ -214,31 +218,47 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
   const verifyEmail = async () => {
     try {
       const res = await ky.post("/api/verify-pin", { json: { email: formData.email, pin: formData.verificationPin } }).json()
-      console.log(res)
+      setEmailVerified(true)
+      showMessage("Email verified")
     } catch (error) {
       console.log(error)
+      showMessage("Error trying to verify email")
     }
   }
 
+  // enviar email en el paso 2
   useEffect(() => {
-    if (currentStep === 1) {
+    if (currentStep === 1 && !emailVerified) {
       sendEmailVerificationPin()
     }
   }, [currentStep])
 
-  // Final step data submittion
-  const handleSubmit = async (values: any) => {
-    // const finalData = { ...formData, ...values };
-    // setIsLoading(true);
-    // try {
-    //   const res = await createUser({ userData: finalData });
-    //   showMessage(res);
-    // } catch (error) {
-    //   showMessage(error instanceof Error ? error.message : 'Error desconocido al registrar el usuario');
-    // }
-    // setIsLoading(false);
-    console.log(formData)
+  const censorEmail = (email: string) => {
+    const [local, domain] = email.split("@");
+    const censoredLocal = local[0] + "****"; // Solo muestra la primera letra del local.
+    const censoredDomain = domain.split(".")[0][0] + "****"; // Muestra la primera letra del dominio y oculta el resto.
+
+    return `${censoredLocal}@${censoredDomain}`;
   };
+
+  // Final step data submittion (user registration)
+  const handleSubmit = async (values: any) => {
+    // 'finalData' is the data to be submitted (userData)
+    const { verificationPin, ...finalData } = { ...formData, ...values };
+    setIsLoading(true);
+
+    try {
+      const res = await createUser({ userData: finalData });
+      showMessage(res);
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : "Error desconocido al registrar el usuario");
+    }
+
+    setIsLoading(false);
+
+    // console.log(finalData)
+  };
+
 
 
   return (
@@ -263,28 +283,30 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
             {/* Paso 2: Verificación de email */}
             {currentStep === 1 && (
               <>
-                {/* <FieldInput
+                {formData.email && !emailVerified && (
+                  <p>
+                    A verification email has been sent to {censorEmail(formData.email)}.
+                  </p>
+                )}
+
+                <input
+                  type="text"
                   disabled={emailVerified}
                   name="verificationPin"
-                  label="Código de verificación"
-                  errors={errors}
-                  touched={touched}
-                /> */}
-
-                <Field
-                  name={"verificationPin"}
-                  type={"number"}
-                  disabled={emailVerified}
                   value={formData.verificationPin}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, verificationPin: e.target.value }));
                     setFieldValue("verificationPin", e.target.value);
                   }}
-                  className={`mt-1 block w-full px-3 py-2 border ${errors.verificationPin && touched.verificationPin ? "border-red-500" : "border-gray-300"
+                  className={`mt-1 block w-full px-3 py-2 border ${errors.verificationPin ? "border-red-500" : "border-gray-300"
                     } rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
                 />
-                <ErrorMessage name={"verificationPin"} component="p" className="text-red-500 text-sm" />
 
-                <button type='button' onClick={() => verifyEmail()}>Verify email</button>
+                {emailVerified && <div className='p-2 text-white bg-green-700 rounded-md'>Email verified successfully</div>}
+
+                <ErrorMessage name="verificationPin" component="p" className="text-red-500 text-sm" />
+
+                {!emailVerified && <div className='itemHover itemClass text-center' onClick={verifyEmail}>Verify email</div>}
               </>
             )}
             {/* Paso 3: Subida de archivos (banner y pfp) */}
@@ -313,28 +335,62 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
             {/* Paso 4: Revisión de datos y registro */}
             {currentStep === 3 && (
               <>
-                review of data
+                <div className="w-full">
+                  {/* header */}
+                  <div className="relative w-full pb-[30%] left-0">
+                    <img
+                      src={formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : ""}
+                      className="absolute top-0 w-full object-cover h-full rounded-b-lg"
+                    />
+                    <div className='z-50 absolute flex justify-start items-end left-3 top-[85%] gap-2'>
+                      <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg">
+                        <img
+                          src={
+                            formData.profileImage
+                              ? URL.createObjectURL(formData.profileImage)
+                              : "/default_pfp.jpg"
+                          }
+                          className="w-full h-full cursor-pointer hover:brightness-90 duration-100"
+                        />
+                      </div>
+                      <div className='dark:text-white text-black flex flex-col justify-center items-start'>
+                        <span className='font-bold text-lg'>{formData.fullname}</span>
+                        <span className='opacity-70'>@{formData.username}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='mt-20'>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <PostSkeleton />
+                    ))}
+                  </div>
+                </div>
               </>
             )}
 
             {/* buttons */}
-            <div className="flex justify-between mt-4">
-              {currentStep > 0 && (
+            <div className="sticky bottom-0 z-50 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3">
+              <div className='flex justify-between'>
+                {currentStep == 0 && <div></div>}
+                {currentStep > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none"
+                  >
+                    Atrás
+                  </button>
+                )}
                 <button
-                  type="button"
-                  onClick={handleBack}
-                  className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none"
+                  disabled={currentStep === 1 && !emailVerified}
+                  type="submit"
+                  className={`${currentStep === 1 && !emailVerified ? "opacity-60 pointer-events-none" : "opacity-100"} flex justify-center items-center py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none`}
                 >
-                  Atrás
+                  {currentStep === steps.length - 1 ? "Registrar" : "Siguiente"}
                 </button>
-              )}
-              <button
-                type="submit"
-                className={`py-2 px-4 ${currentStep === steps.length - 1 ? "bg-green-600" : "bg-blue-600"
-                  } text-white rounded-md hover:bg-green-700 focus:outline-none`}
-              >
-                {currentStep === steps.length - 1 ? "Registrar" : "Siguiente"}
-              </button>
+              </div>
+
+              <Message visible={visible} message={message} />
             </div>
           </Form>
         )}
@@ -346,7 +402,6 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
       >
         Iniciar sesión
       </button>
-      <Message visible={visible} message={message} />
     </>
   )
 }
