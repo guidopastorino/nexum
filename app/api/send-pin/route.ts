@@ -4,8 +4,11 @@ import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import EmailVerificationPin from '@/models/EmailVerificationPin';
+import dbConnect from '@/lib/dbConnect';
 
 export async function POST(req: Request) {
+  await dbConnect()
+
   const { email } = await req.json();
 
   console.log({ email })
