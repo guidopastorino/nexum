@@ -19,7 +19,9 @@ export async function POST(req: Request) {
 
   // Configurar el servicio de correo
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.gmail.com", // Servidor SMTP de Gmail
+    port: 587, // Puerto para TLS
+    secure: false,
     auth: {
       user: process.env.ACCOUNT_APP_EMAIL,
       pass: process.env.ACCOUNT_APP_PASSWORD,
