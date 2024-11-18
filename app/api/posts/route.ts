@@ -5,6 +5,89 @@ import '@/models/';
 import User from '@/models/User';
 import generateSqid from '@/utils/generateSqid';
 
+// Paginación basada en 'cursores' (cursor paginations)
+// ========================================
+// Obtener todos los posts
+// Paginación basada en 'cursores' (cursor paginations)
+// URL de ejemplo con cursor:
+// http://localhost:3000/api/posts?pageSize=5&cursor=2024-11-17T09:00:00.000Z
+// (Se debe cambiar el fetch en /app/page.tsx y el hook de useInfiniteScroll (considerar que se usa para cualquier componente))
+// export async function GET(req: Request) {
+//   try {
+//     await dbConnect();
+
+//     const url = new URL(req.url);
+//     const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+//     const cursor = url.searchParams.get('cursor'); // Referencia para paginación basada en cursor
+
+//     const matchStage = cursor
+//       ? { createdAt: { $lt: new Date(cursor) } }
+//       : {}; // Si no hay cursor, no aplica filtro
+
+//     // Usar un pipeline de agregación para optimizar la consulta
+//     const posts = await Post.aggregate([
+//       { $match: matchStage }, // Filtrar posts según el cursor
+//       { $sort: { createdAt: -1 } }, // Ordenar por fecha de creación (más reciente primero)
+//       { $limit: pageSize }, // Limitar resultados al tamaño de página
+//       {
+//         $lookup: {
+//           from: 'users', // Relación con la colección de usuarios
+//           localField: 'creator',
+//           foreignField: '_id',
+//           as: 'creatorInfo',
+//         },
+//       },
+//       { $unwind: '$creatorInfo' }, // Descomponer el array de usuarios
+//       {
+//         $lookup: {
+//           from: 'posts', // Relación con reposts
+//           localField: 'repostedFrom',
+//           foreignField: '_id',
+//           as: 'repostedFromInfo',
+//         },
+//       },
+//       { $unwind: { path: '$repostedFromInfo', preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: 'comments', // Relación con comentarios
+//           localField: 'comments',
+//           foreignField: '_id',
+//           as: 'commentsInfo',
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 1,
+//           maskedId: 1,
+//           content: 1,
+//           media: 1,
+//           likes: 1,
+//           type: 1,
+//           createdAt: 1,
+//           communityId: 1,
+//           feedId: 1,
+//           'creatorInfo._id': 1,
+//           'creatorInfo.profileImage': 1,
+//           'creatorInfo.fullname': 1,
+//           'creatorInfo.username': 1,
+//           repostedFrom: '$repostedFromInfo',
+//           comments: { $slice: ['$commentsInfo', 3] }, // Limitar los comentarios a 3 por post
+//         },
+//       },
+//     ]);
+
+//     // Incluir el siguiente cursor en la respuesta para la paginación
+//     const nextCursor = posts.length > 0 ? posts[posts.length - 1].createdAt : null;
+
+//     return NextResponse.json({ posts, nextCursor }, { status: 200 });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json({ error: 'Error al obtener los posts' }, { status: 500 });
+//   }
+// }
+//
+// ====================================
+
 // Obtener todos los posts
 export async function GET(req: Request) {
   try {

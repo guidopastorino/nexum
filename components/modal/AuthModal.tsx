@@ -10,6 +10,7 @@ import useShowMessage from '@/hooks/useShowMessage';
 import { createUser } from '@/utils/fetchFunctions';
 import Message from '../Message';
 import ShowPasswordInput from '../ShowPasswordInput';
+import ky from 'ky';
 
 type AuthModalProps = {
   buttonTrigger: React.ReactElement<any, any>;
@@ -134,6 +135,9 @@ const LoginForm = ({ setShowRegister }: LoginFormProps) => {
 }
 
 // register multi-step form
+type RegisterFormProps = {
+  setShowRegister: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
 const registerValidationSchema = [
   Yup.object({
@@ -145,30 +149,27 @@ const registerValidationSchema = [
       .required("La contraseña es obligatoria"),
   }),
   Yup.object({
-    verificationCode: Yup.string().required("El código de verificación es obligatorio"),
+    verificationPin: Yup.string().required("El código de verificación es obligatorio"),
   }),
   Yup.object({}), // Sin validación para imágenes
 ];
 
-type RegisterFormProps = {
-  setShowRegister: React.Dispatch<React.SetStateAction<boolean>>;
-};
+
 
 // This is a multi-step form
 const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false) // Form submittion
   const [currentStep, setCurrentStep] = useState<number>(0) // 0, ..., 3 (where 3 is the final step (user registration))
-
-  useEffect(() => console.log(currentStep), [currentStep])
-
   const steps: string[] = ["Information about you", "Email verification", "The final details...", "Review"];
+
+  const { message, showMessage, visible } = useShowMessage()
 
   const [formData, setFormData] = useState<{
     fullname: string;
     username: string;
     email: string;
     password: string;
-    verificationCode: string;
+    verificationPin: string;
     profileImage: File | null;
     bannerImage: File | null;
   }>({
@@ -176,35 +177,67 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
     username: "",
     email: "",
     password: "",
-    verificationCode: "",
+    verificationPin: "",
     profileImage: null,
     bannerImage: null,
   });
 
-  useEffect(() => console.log(formData), [formData])
+  const [emailVerified, setEmailVerified] = useState<boolean>(false)
 
-  const handleNext = async (values: any) => {
+  const handleNext = (values: any) => {
     setFormData((prev) => ({ ...prev, ...values }));
     setCurrentStep((prev) => prev + 1);
   };
 
-  const handleBack = () => setCurrentStep((prev) => prev - 1);
+  const handleBack = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
 
-  const isLastStep = currentStep === steps.length - 1;
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFieldValue: (field: string, value: any) => void,
+    fieldName: string
+  ) => {
+    const file = event.target.files ? event.target.files[0] : null;
+    setFieldValue(fieldName, file);
+  };
 
-  const { message, showMessage, visible } = useShowMessage()
+  const sendEmailVerificationPin = async () => {
+    try {
+      const res = await ky.post("/api/send-pin", { json: { email: formData.email } }).json()
+      console.log(res)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const verifyEmail = async () => {
+    try {
+      const res = await ky.post("/api/verify-pin", { json: { email: formData.email, pin: formData.verificationPin } }).json()
+      console.log(res)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    if (currentStep === 1) {
+      sendEmailVerificationPin()
+    }
+  }, [currentStep])
 
   // Final step data submittion
   const handleSubmit = async (values: any) => {
-    const finalData = { ...formData, ...values };
-    setIsLoading(true);
-    try {
-      const res = await createUser({ userData: finalData });
-      showMessage(res);
-    } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Error desconocido al registrar el usuario');
-    }
-    setIsLoading(false);
+    // const finalData = { ...formData, ...values };
+    // setIsLoading(true);
+    // try {
+    //   const res = await createUser({ userData: finalData });
+    //   showMessage(res);
+    // } catch (error) {
+    //   showMessage(error instanceof Error ? error.message : 'Error desconocido al registrar el usuario');
+    // }
+    // setIsLoading(false);
+    console.log(formData)
   };
 
 
@@ -214,101 +247,77 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
       <Formik
         initialValues={formData}
         validationSchema={registerValidationSchema[currentStep]}
-        onSubmit={isLastStep ? handleSubmit : handleNext}
+        onSubmit={(currentStep === steps.length - 1) ? handleSubmit : handleNext}
       >
-        {({ errors, touched }) => (
+        {({ errors, touched, setFieldValue }) => (
           <Form className="space-y-4">
+            {/* Paso 1: Información general */}
             {currentStep === 0 && (
               <>
-                {/* Paso 1: Información del usuario */}
-                <div>
-                  <label htmlFor="fullname" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Nombre completo
-                  </label>
-                  <Field
-                    name="fullname"
-                    type="text"
-                    className={`mt-1 block w-full px-3 py-2 border ${errors.fullname && touched.fullname ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
-                    placeholder="Tu nombre completo"
-                  />
-                  <ErrorMessage name="fullname" component="p" className="text-red-500 text-sm" />
-                </div>
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Usuario
-                  </label>
-                  <Field
-                    name="username"
-                    type="text"
-                    className={`mt-1 block w-full px-3 py-2 border ${errors.username && touched.username ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
-                    placeholder="Tu usuario"
-                  />
-                  <ErrorMessage name="username" component="p" className="text-red-500 text-sm" />
-                </div>
+                <FieldInput name="fullname" label="Nombre completo" errors={errors} touched={touched} />
+                <FieldInput name="username" label="Usuario" errors={errors} touched={touched} />
+                <FieldInput name="email" label="Email" type="email" errors={errors} touched={touched} />
+                <FieldInput name="password" label="Contraseña" type="password" errors={errors} touched={touched} />
               </>
             )}
+            {/* Paso 2: Verificación de email */}
             {currentStep === 1 && (
               <>
-                {/* Paso 2: Código de verificación */}
-                <div>
-                  <label htmlFor="verificationCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Código de verificación
-                  </label>
-                  <Field
-                    name="verificationCode"
-                    type="text"
-                    className={`mt-1 block w-full px-3 py-2 border ${errors.verificationCode && touched.verificationCode ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
-                    placeholder="Código enviado a tu correo"
-                  />
-                  <ErrorMessage name="verificationCode" component="p" className="text-red-500 text-sm" />
-                </div>
+                {/* <FieldInput
+                  disabled={emailVerified}
+                  name="verificationPin"
+                  label="Código de verificación"
+                  errors={errors}
+                  touched={touched}
+                /> */}
+
+                <Field
+                  name={"verificationPin"}
+                  type={"number"}
+                  disabled={emailVerified}
+                  value={formData.verificationPin}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setFieldValue("verificationPin", e.target.value);
+                  }}
+                  className={`mt-1 block w-full px-3 py-2 border ${errors.verificationPin && touched.verificationPin ? "border-red-500" : "border-gray-300"
+                    } rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
+                />
+                <ErrorMessage name={"verificationPin"} component="p" className="text-red-500 text-sm" />
+
+                <button type='button' onClick={() => verifyEmail()}>Verify email</button>
               </>
             )}
+            {/* Paso 3: Subida de archivos (banner y pfp) */}
             {currentStep === 2 && (
               <>
-                {/* Paso 3: Detalles finales */}
-                <Field
-                  name="profileImage"
-                  type="file"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const file = e.target.files && e.target.files[0]; // Verifica que files no sea null
-                    setFormData((prev) => ({
-                      ...prev,
-                      profileImage: file || null,
-                    }));
-                  }}
-                />
                 <div>
-                  <label htmlFor="bannerImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Imagen de banner
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Imagen de perfil</label>
+                  <input
+                    name="profileImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, setFieldValue, "profileImage")}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Imagen de banner</label>
                   <input
                     name="bannerImage"
                     type="file"
-                    className="mt-1 block w-full px-3 py-2 text-gray-700 dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100"
                     accept="image/*"
+                    onChange={(e) => handleFileChange(e, setFieldValue, "bannerImage")}
                   />
                 </div>
               </>
             )}
+            {/* Paso 4: Revisión de datos y registro */}
+            {currentStep === 3 && (
+              <>
+                review of data
+              </>
+            )}
+
             {/* buttons */}
-            {currentStep === 3
-                ? <>
-                  <button
-                    type="submit"
-                    className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none"
-                  >
-                    Registrarse
-                  </button>
-                </>
-                : <>
-                  <button
-                    onClick={handleNext}
-                    className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none"
-                  >
-                    Siguiente
-                  </button>
-            </>}
             <div className="flex justify-between mt-4">
               {currentStep > 0 && (
                 <button
@@ -319,11 +328,18 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
                   Atrás
                 </button>
               )}
+              <button
+                type="submit"
+                className={`py-2 px-4 ${currentStep === steps.length - 1 ? "bg-green-600" : "bg-blue-600"
+                  } text-white rounded-md hover:bg-green-700 focus:outline-none`}
+              >
+                {currentStep === steps.length - 1 ? "Registrar" : "Siguiente"}
+              </button>
             </div>
           </Form>
         )}
       </Formik>
-
+      {/* change to sign in */}
       <button
         onClick={() => setShowRegister(false)}
         className="w-full mt-4 text-center text-blue-600 hover:underline"
@@ -334,3 +350,19 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
     </>
   )
 }
+
+const FieldInput = ({ disabled = false, name, label, type = "text", errors, touched }: any) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {label}
+    </label>
+    <Field
+      name={name}
+      type={type}
+      disabled={disabled}
+      className={`mt-1 block w-full px-3 py-2 border ${errors[name] && touched[name] ? "border-red-500" : "border-gray-300"
+        } rounded-md shadow-sm dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500`}
+    />
+    <ErrorMessage name={name} component="p" className="text-red-500 text-sm" />
+  </div>
+);

@@ -24,53 +24,54 @@ interface IUser extends Document {
 export async function GET(req: Request, { params }: { params: { id: string } }, res: Response) {
   const { id } = params;
   const url = new URL(req.url);
-  const userId = url.searchParams.get('userId');
+  const userId = url.searchParams.get("userId");
 
   try {
-    let user = null;
     await dbConnect();
 
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      user = await User.findById(id)
-        .select("_id fullname username isVerified profileImage createdAt updatedAt following followers posts likes")
-        .lean<IUser>();
+    if (!id) {
+      return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
     }
 
-    if (!user) {
-      user = await User.findOne({ username: id })
-        .select("_id fullname username isVerified profileImage createdAt updatedAt following followers posts likes")
-        .lean<IUser>();
-    }
+    const query = mongoose.Types.ObjectId.isValid(id) 
+      ? { _id: new mongoose.Types.ObjectId(id) } 
+      : { username: id };
 
-    if (!user) {
+    const userData = await User.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          isFollowingUser: userId && mongoose.Types.ObjectId.isValid(userId)
+            ? {
+                $in: [new mongoose.Types.ObjectId(userId), "$followers"],
+              }
+            : false, // Si userId no es válido, asumimos que no está siguiendo
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          fullname: 1,
+          username: 1,
+          isVerified: 1,
+          profileImage: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          postsCount: { $size: "$posts" },
+          followersCount: { $size: "$followers" },
+          followingCount: { $size: "$following" },
+          isFollowingUser: 1,
+        },
+      },
+    ]);
+
+    if (!userData || userData.length === 0) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Verificamos si el usuario logueado sigue al creador
-    const isFollowingUser: boolean = userId ? user.followers.includes(userId as any) : false;
-
-    // Calculamos las métricas de conteo
-    const postsCount = user.posts.length;
-    const followersCount = user.followers.length;
-    const followingCount = user.following.length;
-
-    // Creamos un objeto sin los campos que no deseas enviar
-    const userData = {
-      _id: user._id,
-      fullname: user.fullname,
-      username: user.username,
-      isVerified: user.isVerified,
-      profileImage: user.profileImage,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      postsCount,
-      followersCount,
-      followingCount,
-      isFollowingUser: isFollowingUser ?? false,
-    };
-
-    return NextResponse.json(userData, { status: 200 });
+    return NextResponse.json(userData[0], { status: 200 });
   } catch (error) {
+    console.error("Error fetching user:", error);
     return NextResponse.json({ message: "Error fetching user", error }, { status: 500 });
   }
 }

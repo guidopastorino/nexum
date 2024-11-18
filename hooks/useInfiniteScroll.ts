@@ -16,7 +16,7 @@ function useInfiniteScroll<T>({
   fetcher,
   pageSize = 10,
   staleTime = 1000 * 60 * 5,
-  scrollOffset = 500, // Default: cargar más 500px antes del final de la página
+  scrollOffset = 300, // Default: cargar más 300px antes del final de la página
 }: InfiniteScrollProps<T>) {
   const {
     data,

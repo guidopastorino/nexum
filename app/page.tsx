@@ -29,7 +29,7 @@ const PostsList = () => {
 
   if (isLoading) return <div className='w-full flex flex-col justify-start items-start gap-3'>
     {Array.from({ length: 10 }).map((_, i) => (
-      <PostSkeleton />
+      <PostSkeleton key={i} />
     ))}
   </div>;
 
