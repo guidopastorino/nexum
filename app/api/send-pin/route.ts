@@ -8,6 +8,8 @@ import EmailVerificationPin from '@/models/EmailVerificationPin';
 export async function POST(req: Request) {
   const { email } = await req.json();
 
+  console.log({email})
+
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
@@ -17,7 +19,7 @@ export async function POST(req: Request) {
 
   // Configurar el servicio de correo
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Cambia esto según el servicio que uses
+    service: 'gmail',
     auth: {
       user: process.env.ACCOUNT_APP_EMAIL,
       pass: process.env.ACCOUNT_APP_PASSWORD,
