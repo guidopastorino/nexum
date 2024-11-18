@@ -8,7 +8,7 @@ import EmailVerificationPin from '@/models/EmailVerificationPin';
 export async function POST(req: Request) {
   const { email } = await req.json();
 
-  console.log({email})
+  console.log({ email })
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -36,8 +36,12 @@ export async function POST(req: Request) {
   const newEmailVerificationPin = new EmailVerificationPin({ email, pin });
 
   try {
-    await newEmailVerificationPin.save()
-    await transporter.sendMail(mailOptions);
+    // Ejecuta las operaciones en paralelo
+    await Promise.all([
+      newEmailVerificationPin.save(),
+      transporter.sendMail(mailOptions),
+    ]);
+
     return NextResponse.json({ message: 'PIN enviado a tu correo' }, { status: 200 });
   } catch (error) {
     console.error('Error al enviar el correo:', error);
