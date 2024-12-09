@@ -24,6 +24,7 @@ const useAuthStateListener = () => {
             isVerified: userData.isVerified,
             email: userData.email,
             profileImage: userData.profileImage,
+            bannerImage: userData.bannerImage,
             createdAt: userData.createdAt,
             updatedAt: userData.updatedAt,
           })

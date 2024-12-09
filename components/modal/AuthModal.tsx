@@ -12,6 +12,9 @@ import Message from '../Message';
 import ShowPasswordInput from '../ShowPasswordInput';
 import ky from 'ky';
 import PostSkeleton from '../PostSkeleton';
+//
+import { UploadButton } from "@uploadthing/react";
+import { OurFileRouter } from "@/app/api/uploadthing/core";
 
 type AuthModalProps = {
   buttonTrigger: React.ReactElement<any, any>;
@@ -34,7 +37,6 @@ const AuthModal = ({ buttonTrigger }: AuthModalProps) => {
 };
 
 export default AuthModal;
-
 
 // 
 
@@ -155,27 +157,27 @@ const registerValidationSchema = [
   Yup.object({}), // Sin validación para imágenes
 ];
 
-
+type FormDataState = {
+  fullname: string;
+  username: string;
+  email: string;
+  password: string;
+  verificationPin: string;
+  profileImage: string | null;
+  bannerImage: string | null;
+};
 
 // This is a multi-step form
 const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false) // Form submittion
-  const [currentStep, setCurrentStep] = useState<number>(0) // 0, ..., 3 (where 3 is the final step (user registration))
-  const steps: string[] = ["Information about you", "Email verification", "The final details...", "Review"];
+  const [currentStep, setCurrentStep] = useState<number>(0) // 0, ..., 2 (where 2 is the final step (user registration))
+  const steps: string[] = ["Information about you", "Email verification", "Review"];
 
   const [emailVerified, setEmailVerified] = useState<boolean>(false)
 
   const { message, showMessage, visible } = useShowMessage()
 
-  const [formData, setFormData] = useState<{
-    fullname: string;
-    username: string;
-    email: string;
-    password: string;
-    verificationPin: string;
-    profileImage: File | null;
-    bannerImage: File | null;
-  }>({
+  const [formData, setFormData] = useState<FormDataState>({
     fullname: "",
     username: "",
     email: "",
@@ -189,7 +191,7 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
   useEffect(() => console.log(currentStep), [currentStep])
 
   const handleNext = (values: any) => {
-    setFormData((prev) => ({ ...prev, ...values }));
+    setFormData((prev) => ({ ...prev, ...values })); // Combina todos los valores
     setCurrentStep((prev) => prev + 1);
   };
 
@@ -203,7 +205,11 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
     fieldName: string
   ) => {
     const file = event.target.files ? event.target.files[0] : null;
-    setFieldValue(fieldName, file);
+    if (file) {
+      const imageUrl = URL.createObjectURL(file); // Genera una URL para previsualización
+      setFieldValue(fieldName, { file, url: imageUrl }); // Actualiza el valor en Formik
+      setFormData((prev) => ({ ...prev, [fieldName]: { file, url: imageUrl } })); // Actualiza en formData
+    }
   };
 
   const sendEmailVerificationPin = async () => {
@@ -259,8 +265,6 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
     // console.log(finalData)
   };
 
-
-
   return (
     <>
       <p className="font-bold text-center text-2xl mb-4">{steps[currentStep]}</p>
@@ -310,47 +314,23 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
               </>
             )}
             {/* Paso 3: Subida de archivos (banner y pfp) */}
+            {/* Paso 4: Revisión de datos y registro */}
             {currentStep === 2 && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Imagen de perfil</label>
-                  <input
-                    name="profileImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, setFieldValue, "profileImage")}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Imagen de banner</label>
-                  <input
-                    name="bannerImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, setFieldValue, "bannerImage")}
-                  />
-                </div>
-              </>
-            )}
-            {/* Paso 4: Revisión de datos y registro */}
-            {currentStep === 3 && (
-              <>
                 <div className="w-full">
+                  <OurUploadButton type='profileImage' setFormData={setFormData} setFieldValue={setFieldValue} />
+                  <OurUploadButton type='bannerImage' setFormData={setFormData} setFieldValue={setFieldValue} />
                   {/* header */}
                   <div className="relative w-full pb-[30%] left-0">
                     <img
-                      src={formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : ""}
+                      src={formData?.bannerImage ? formData?.bannerImage : "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg"}
                       className="absolute top-0 w-full object-cover h-full rounded-b-lg"
                     />
                     <div className='z-50 absolute flex justify-start items-end left-3 top-[85%] gap-2'>
                       <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg">
                         <img
-                          src={
-                            formData.profileImage
-                              ? URL.createObjectURL(formData.profileImage)
-                              : "/default_pfp.jpg"
-                          }
-                          className="w-full h-full cursor-pointer hover:brightness-90 duration-100"
+                          src={formData?.profileImage ? formData?.profileImage : "/default_pfp.jpg"}
+                          className="w-full h-full object-cover cursor-pointer hover:brightness-90 duration-100"
                         />
                       </div>
                       <div className='dark:text-white text-black flex flex-col justify-center items-start'>
@@ -420,4 +400,32 @@ const FieldInput = ({ disabled = false, name, label, type = "text", errors, touc
     />
     <ErrorMessage name={name} component="p" className="text-red-500 text-sm" />
   </div>
+);
+
+const OurUploadButton = ({
+  type,
+  setFormData,
+  setFieldValue, // Aceptar setFieldValue desde Formik
+}: {
+  type: "profileImage" | "bannerImage";
+  setFormData: React.Dispatch<React.SetStateAction<FormDataState>>;
+  setFieldValue: (field: string, value: any) => void;
+}) => (
+  <UploadButton<OurFileRouter, "imageUploader">
+    endpoint="imageUploader"
+    onClientUploadComplete={(res) => {
+      if (res && res.length > 0) {
+        const uploadedFileUrl = res[0].url; // Get the url of the file
+
+        // Sincronizar con Formik y formData
+        setFieldValue(type, uploadedFileUrl);
+        setFormData((prev) => ({ ...prev, [type]: uploadedFileUrl }));
+
+        console.log("Upload Completed");
+      }
+    }}
+    onUploadError={(error: Error) => {
+      console.log(`ERROR! ${error.message}`);
+    }}
+  />
 );

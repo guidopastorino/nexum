@@ -14,7 +14,7 @@ button>* {
 
 /* used for causal items hovering */
 .itemHover {
-  @apply md:hover:bg-gray-100 md:dark:hover:bg-neutral-700/50 active:bg-gray-200 dark:active:bg-neutral-600/50 duration-100 cursor-pointer whitespace-nowrap;
+  @apply hover:bg-gray-200 dark:hover:bg-neutral-700/50 active:bg-gray-300 dark:active:bg-neutral-600/50 duration-100 cursor-pointer whitespace-nowrap;
 }
 
 /* used for dropdown menu items (here we apply the background) */
@@ -75,3 +75,5 @@ button>* {
 		transform: translateY(0);
 	}
 }
+
+/* thread line style (connecting posts */

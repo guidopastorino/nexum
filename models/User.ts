@@ -8,10 +8,11 @@ interface IUser extends Document {
   email: string;
   password: string;
   profileImage: string | null;
-  following: Types.ObjectId[]; // Usuarios seguidos
-  followers: Types.ObjectId[]; // Usuarios seguidores
-  posts: Types.ObjectId[]; // Posts creados por el usuario
-  likes: Types.ObjectId[]; // Posts que ha dado like
+  bannerImage: string | null;
+  following: Types.ObjectId[];
+  followers: Types.ObjectId[];
+  posts: Types.ObjectId[];
+  likes: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +42,10 @@ const UserSchema: Schema = new Schema(
       required: true,
     },
     profileImage: {
+      type: String,
+      default: null,
+    },
+    bannerImage: {
       type: String,
       default: null,
     },

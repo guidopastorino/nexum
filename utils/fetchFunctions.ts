@@ -1,4 +1,5 @@
-import { IUser } from "@/types/types";
+import { PostCreationProps } from "@/components/CreatePostFixedButton";
+import { IUser, PostProps } from "@/types/types";
 import ky from "ky"
 
 export const getUserData = async (userId: string): Promise<IUser | null> => {
@@ -40,3 +41,42 @@ export const createUser = async ({
     return "Error al registrar el usuario: " + (error instanceof Error ? error.message : "Desconocido");
   }
 };
+
+// create a 'normal' post
+export const createPost = async ({ creator, content, media, type }: PostCreationProps) => {
+  try {
+    const res = await ky.post("/api/posts", { json: { creator, content, media, type } });
+    if (!res.ok) {
+      console.error(`Error: ${res.statusText}`);
+      const errorData = await res.json();
+      console.error(errorData);
+      return errorData
+    } else {
+      const data = await res.json();
+      console.log(data);
+      return data
+    }
+  } catch (error) {
+    console.error("Network error:", error);
+  }
+}
+
+// Gets all the posts from a user
+// 'creator' could be the _id or username
+export const getUserPosts = async (creator: string): Promise<PostProps[]> => {
+  try {
+    const res = await ky.get(`/api/users/${creator}/posts`);
+    if (!res.ok) {
+      console.error(`Error: ${res.statusText}`);
+      const errorData = await res.json();
+      console.error(errorData);
+      return [];
+    } else {
+      const data = await res.json();
+      return data as PostProps[];
+    }
+  } catch (error) {
+    console.error("Network error:", error);
+    return [];
+  }
+}

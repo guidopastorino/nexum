@@ -7,6 +7,8 @@ import { PostProps } from '@/types/types';
 import ky from 'ky';
 import Loader from '@/components/Loader';
 import PostSkeleton from '@/components/PostSkeleton';
+import CreatePostFixedButton from '@/components/CreatePostFixedButton';
+import AsideRight from '@/components/AsideRight';
 
 const fetchPosts = async (page: number, pageSize: number): Promise<PostProps[]> => {
   return await ky.get(`/api/posts?page=${page}&pageSize=${pageSize}`).json();
@@ -37,13 +39,20 @@ const PostsList = () => {
   if (isError) return <p>Error al cargar los posts: {error instanceof Error ? error.message : "Error al cargar los posts"}</p>;
 
   return (
-    <div>
-      {posts.map((post, i) => (
-        <Post key={i} {...post} />
-      ))}
-      {isFetchingNextPage && <div className='flex justify-center items-center p-3'><Loader width={30} height={30} /></div>}
-      {!hasNextPage && <div className='flex justify-center items-center p-3 dark:text-neutral-500 text-gray-500'>&#8226;</div>}
-    </div>
+    <>
+      <div>
+        {posts.map((post, i) => (
+          <Post key={i} {...post} />
+        ))}
+        {isFetchingNextPage && <div className='flex justify-center items-center p-3'><Loader width={30} height={30} /></div>}
+        {!hasNextPage && <div className='flex justify-center items-center p-3 dark:text-neutral-500 text-gray-500'>&#8226;</div>}
+        <CreatePostFixedButton />
+      </div>
+
+      <AsideRight>
+        Who to follow
+      </AsideRight>
+    </>
   );
 };
 

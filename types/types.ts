@@ -6,6 +6,7 @@ export interface UserState {
   isVerified: boolean | null;
   email: string | null;
   profileImage: string | null;
+  bannerImage: string | null;
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -18,6 +19,7 @@ export interface IUser {
   isVerified: boolean;
   email: string;
   profileImage: string | null;
+  bannerImage: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

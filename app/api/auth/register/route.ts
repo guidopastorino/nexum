@@ -7,7 +7,7 @@ export async function POST(req: Request, res: Response) {
   try {
     await dbConnect()
 
-    const { fullname, username, email, password } = await req.json()
+    const { fullname, username, email, password, profileImage, bannerImage } = await req.json()
 
     // Verificar si están todos los datos
     if (!fullname || !username || !email || !password) {
@@ -21,7 +21,7 @@ export async function POST(req: Request, res: Response) {
     }
 
     // Crear el nuevo usuario (mandamos la contraseña a texto plano ya que el metodo en 'presave' de User se encargará de hashearla)
-    const newUser = new User({ fullname, username, email, password });
+    const newUser = new User({ fullname, username, email, password, profileImage, bannerImage });
     await newUser.save();
 
     return NextResponse.json({ message: 'Usuario creado con éxito' }, { status: 201 });

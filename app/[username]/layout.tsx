@@ -1,0 +1,73 @@
+"use client"
+
+import ShowUserProfileImage from '@/components/ShowUserProfileImage';
+import { getUserData } from '@/utils/fetchFunctions';
+import Link from 'next/link';
+import React from 'react'
+import { useQuery } from 'react-query';
+
+interface ProfileLayoutParams {
+  params: { username: string };
+  children: React.ReactNode;
+}
+
+const layout = ({ params, children }: ProfileLayoutParams) => {
+  const { data: user, isLoading, error } = useQuery(
+    ['userProfile', params.username],
+    () => getUserData(params.username),
+    {
+      enabled: !!params.username,
+      staleTime: 1000 * 60 * 5,
+      cacheTime: 1000 * 60 * 10,
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  if (isLoading) return <div>loading</div>
+
+  if (error) return <div>Error fetching user data</div>
+
+  return (
+    <div className="w-full">
+      <div className="relative w-full pb-[30%] left-0 -top-3">
+        <img
+          src={user?.bannerImage ? user?.bannerImage : "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg"}
+          className="absolute top-0 w-full object-cover h-full rounded-b-lg"
+        />
+        <div className='z-30 absolute flex justify-start items-end left-3 top-[85%] gap-2'>
+          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow-lg">
+            <ShowUserProfileImage userProfileImageUrl={user?.profileImage ? user?.profileImage : "/default_pfp.jpg"}>
+              <img
+                src={user?.profileImage ? user?.profileImage : "/default_pfp.jpg"}
+                className="w-full h-full object-cover cursor-pointer hover:brightness-90 duration-100"
+              />
+            </ShowUserProfileImage>
+          </div>
+          <div className='dark:text-white text-black flex flex-col justify-center items-start'>
+            <span className='font-bold text-lg'>{user?.fullname}</span>
+            <span className='opacity-70'>@{user?.username}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* tabs */}
+      <div className="mt-20">
+
+        <ul>
+          <li className='list-none'>
+            <Link href={`/${params.username}/`} className='itemHover p-3 inline-block'>Posts</Link>
+            <Link href={`/${params.username}/media`} className='itemHover p-3 inline-block'>Media</Link>
+            <Link href={`/${params.username}/feeds`} className='itemHover p-3 inline-block'>Feeds</Link>
+            <Link href={`/${params.username}/communities`} className='itemHover p-3 inline-block'>Communities</Link>
+            <Link href={`/${params.username}/likes`} className='itemHover p-3 inline-block'>Likes</Link>
+          </li>
+        </ul>
+
+        {/* pages */}
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export default layout

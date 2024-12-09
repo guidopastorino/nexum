@@ -8,6 +8,7 @@ import useAuthStateListener from "@/hooks/useAuthStateListener";
 import { QueryClient, QueryClientProvider } from "react-query";
 import Next13ProgressBar from 'next13-progressbar'
 import { ThemeProvider } from "next-themes";
+import Toast from '@/components/Toast';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const UseApp = ({ children }: { children: React.ReactNode }) => {
           <AuthStateListenerWrapper>
             <QueryClientProvider client={queryClient}>
               <Next13ProgressBar height="4px" color="#ea580c" options={{ showSpinner: false }} showOnShallow />
+              <Toast />
               {/* Para transición al cambiar entre páginas */}
               {children}
             </QueryClientProvider>

@@ -9,6 +9,7 @@ const initialState: UserState = {
   isVerified: null,
   email: null,
   profileImage: null,
+  bannerImage: null,
   createdAt: null,
   updatedAt: null,
 };
@@ -24,6 +25,7 @@ const userSlice = createSlice({
       state.isVerified = action.payload.isVerified;
       state.email = action.payload.email;
       state.profileImage = action.payload.profileImage;
+      state.bannerImage = action.payload.bannerImage;
       state.createdAt = action.payload.createdAt;
       state.updatedAt = action.payload.updatedAt;
     },
@@ -34,6 +36,7 @@ const userSlice = createSlice({
       state.isVerified = null;
       state.email = null;
       state.profileImage = null;
+      state.bannerImage = null;
       state.createdAt = null;
       state.updatedAt = null;
     },

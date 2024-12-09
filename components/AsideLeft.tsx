@@ -11,6 +11,7 @@ import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { RiFileListLine, RiFileListFill } from 'react-icons/ri'
+import { RiFileList3Line, RiFileList3Fill  } from "react-icons/ri";
 import useUser from '@/hooks/useUser';
 
 type NavigationLinkProps = {
@@ -32,6 +33,7 @@ const AsideLeft = () => {
     { icon: <BsBell />, activeIcon: <BsFillBellFill />, title: "Notifications", route: "/notifications" },
     { icon: <MdPeopleOutline />, activeIcon: <MdPeople />, title: "Communities", route: "/communities" },
     { icon: <GoBookmark />, activeIcon: <GoBookmarkFill />, title: "Bookmarks", route: "/bookmarks" },
+    { icon: <RiFileList3Line />, activeIcon: <RiFileList3Fill />, title: "Lists", route: "/lists" },
     { icon: <MdOutlineEmail />, activeIcon: <MdEmail />, title: "Messages", route: "/messages" },
     { icon: <MdOutlinePersonOutline />, activeIcon: <MdPerson />, title: "Profile", route: `/${user.username}` },
   ];
@@ -55,22 +57,20 @@ const AsideLeft = () => {
             // Si el usuario no está logueado, renderiza solo "Feed", "Explore" y "Communities"
             session?.user ? true : (link.route === '/' || link.route === '/explore' || link.route === '/feeds' || link.route === '/communities')
           )
-          .map((el, i) => (
-            <li key={i} className='list-none'>
-              <Link href={el.route} className={`${el.route === pathname ? "bg-gray-200 dark:bg-neutral-800/70" : ""} active:brightness-90 hover:bg-gray-300 dark:hover:bg-neutral-800 rounded-md duration-100 flex p-3 justify-start items-center gap-3`}>
+          .map((el: NavigationLinkProps, i: number) => (
+            <li key={i} className='list-none mb-2'>
+              <Link href={el.route} className={`${el.route === pathname ? "bg-gray-200 dark:bg-neutral-800/70" : ""} flex justify-start items-center gap-3 px-5 py-2 itemHover rounded-full`}>
                 <div className='w-6 h-6 overflow-hidden shrink-0 flex justify-center items-center'>
                   {el.route === pathname
                     ? React.cloneElement(el.activeIcon as React.ReactElement, { className: 'w-full h-full' })
                     : React.cloneElement(el.icon as React.ReactElement, { className: 'w-full h-full' })
                   }
                 </div>
-                <span className='text-lg'>{el.title}</span>
+                <span className='text-sm'>{el.title}</span>
               </Link>
             </li>
           ))}
       </ul>
-
-      {/*  */}
 
       <div>
         <span className='text-sm text-center block dark:text-neutral-600 text-gray-400 break-words'>

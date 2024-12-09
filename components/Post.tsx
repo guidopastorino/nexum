@@ -7,6 +7,8 @@ import { BsPerson, BsThreeDots } from 'react-icons/bs';
 import ResponsiveMenu from './ResponsiveMenu';
 import UserDetailsProfileCard from './UserDetailsProfileCard';
 import { isImage } from '@/utils/detectFileType';
+import HashWords from './HashWords';
+import useToast from '@/hooks/useToast'
 
 // Recibe los datos del post como props
 const Post = ({
@@ -30,8 +32,8 @@ const Post = ({
     return (
       <div className="flex justify-center items-start gap-2">
         {/* creator profile image */}
-        <UserDetailsProfileCard creatorId={creator._id}>
-          <div className='self-start shrink-0'>
+        <div className='self-start shrink-0'>
+          <UserDetailsProfileCard creatorId={creator._id}>
             <Link href={`/${creator.username}`}>
               <img
                 className='w-10 h-10 object-cover overflow-hidden rounded-full'
@@ -39,8 +41,8 @@ const Post = ({
                 alt={`${creator.fullname}'s profile image`}
               />
             </Link>
-          </div>
-        </UserDetailsProfileCard>
+          </UserDetailsProfileCard>
+        </div>
         {/* post content */}
         <div className='flex justify-start items-stretch gap-2 flex-col w-full flex-1'>
           {/* creator info and post date + options btn */}
@@ -78,7 +80,7 @@ const Post = ({
           </div>
           {/* content and media */}
           <div>
-            <span>{content}</span>
+            {content && <HashWords text={content} maskedId={maskedId} />}
             <MediaGallery media={media ?? []} />
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
@@ -131,6 +133,7 @@ const Post = ({
                         <HiOutlineArrowPathRoundedSquare size={20} />
                         <span>Repost</span>
                       </div>
+                      {/* button to quote the post */}
                       <div
                         onClick={() => setMenuOpen(!menuOpen)}
                         className="itemClass itemHover"
@@ -160,8 +163,8 @@ const Post = ({
     return (
       <div className="flex justify-center items-start gap-2">
         {/* creator profile image */}
-        <UserDetailsProfileCard creatorId={repostedFrom?.creator._id as string}>
-          <div className='self-start shrink-0'>
+        <div className='self-start shrink-0'>
+          <UserDetailsProfileCard creatorId={repostedFrom?.creator._id as string}>
             <Link href={`/${repostedFrom?.creator.username}`}>
               <img
                 className='w-10 h-10 object-cover overflow-hidden rounded-full'
@@ -169,8 +172,8 @@ const Post = ({
                 alt={`${repostedFrom?.creator.fullname}'s profile image`}
               />
             </Link>
-          </div>
-        </UserDetailsProfileCard>
+          </UserDetailsProfileCard>
+        </div>
         {/* post content */}
         <div className='flex justify-start items-stretch gap-2 flex-col w-full flex-1'>
           {/* creator info and post date + options btn */}
@@ -208,7 +211,7 @@ const Post = ({
           </div>
           {/* content and media */}
           <div>
-            <span>{repostedFrom?.content}</span>
+            {repostedFrom?.content && <HashWords text={repostedFrom?.content} maskedId={repostedFrom?.maskedId} />}
             <MediaGallery media={repostedFrom?.media ?? []} />
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
@@ -223,7 +226,7 @@ const Post = ({
                 <span>{timeAgo(repostedFrom?.quotedPost.createdAt)}</span>
               </div>
               {/* reposted quoted post content */}
-              <span>{repostedFrom?.quotedPost?.content}</span>
+              {repostedFrom?.quotedPost?.content && <HashWords text={repostedFrom?.quotedPost?.content} maskedId={repostedFrom?.quotedPost?.maskedId} />}
               {/* reposted quoted post media */}
               <MediaGallery media={repostedFrom?.quotedPost?.media ?? []} />
             </Link>
@@ -288,13 +291,21 @@ const Post = ({
   }
 
   return (
-    <div className='w-full max-w-xl mx-auto bg-white dark:bg-neutral-800 border-b dark:border-neutral-700 p-3 mb-2'>
+    <div className='block w-full max-w-lg mx-auto bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700/70 p-3 mb-2'>
       {/* si es un repost, indicar quién lo reposteó */}
       {type === "repost" && <div className='text-black dark:text-neutral-200 flex justify-start items-center gap-2 mb-2'>
         <div className="w-10 h-10 flex justify-end items-center">
           <HiOutlineArrowPathRoundedSquare />
         </div>
-        <span>Reposted by {creator.username}</span>
+        <span>
+          <span>Reposted by</span>
+          <span> </span>
+          <UserDetailsProfileCard creatorId={creator._id}>
+            <Link className='hover:underline' href={`/${creator.username}`}>
+              {creator.username}
+            </Link>
+          </UserDetailsProfileCard>
+        </span>
       </div>}
 
       {/* post content */}
@@ -308,6 +319,7 @@ export default Post;
 function formatTimeAgo(date: Date) {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
 
+  if(seconds < 3) return "now"
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
@@ -329,6 +341,8 @@ function formatTimeAgo(date: Date) {
 const MediaGallery = ({ media }: { media: MediaFile[] }) => {
   const displayMedia = media.slice(0, 4); // Solo mostramos hasta las primeras 4 imágenes
   const extraCount = media.length - 4; // Cantidad de imágenes extra
+
+  if(media.length === 0) return null;
 
   return (
     <div

@@ -10,6 +10,7 @@ interface IUser extends Document {
   username: string;
   isVerified: boolean;
   profileImage: string | null;
+  bannerImage: string | null;
   following: Types.ObjectId[]; // Usuarios seguidos
   followers: Types.ObjectId[]; // Usuarios seguidores
   posts: Types.ObjectId[]; // Posts creados por el usuario
@@ -55,6 +56,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }, 
           username: 1,
           isVerified: 1,
           profileImage: 1,
+          bannerImage: 1,
           createdAt: 1,
           updatedAt: 1,
           postsCount: { $size: "$posts" },
