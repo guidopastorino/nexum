@@ -1,6 +1,6 @@
 "use client"
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import Modal from './Modal';
@@ -15,6 +15,7 @@ import PostSkeleton from '../PostSkeleton';
 //
 import { UploadButton } from "@uploadthing/react";
 import { OurFileRouter } from "@/app/api/uploadthing/core";
+import { uploadFiles } from '@/actions/uploadFiles';
 
 type AuthModalProps = {
   buttonTrigger: React.ReactElement<any, any>;
@@ -177,6 +178,9 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
 
   const { message, showMessage, visible } = useShowMessage()
 
+  const ProfileImageRef = useRef<HTMLInputElement | null>(null)
+  const BannerImageRef = useRef<HTMLInputElement | null>(null)
+
   const [formData, setFormData] = useState<FormDataState>({
     fullname: "",
     username: "",
@@ -197,19 +201,6 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
-  };
-
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    setFieldValue: (field: string, value: any) => void,
-    fieldName: string
-  ) => {
-    const file = event.target.files ? event.target.files[0] : null;
-    if (file) {
-      const imageUrl = URL.createObjectURL(file); // Genera una URL para previsualización
-      setFieldValue(fieldName, { file, url: imageUrl }); // Actualiza el valor en Formik
-      setFormData((prev) => ({ ...prev, [fieldName]: { file, url: imageUrl } })); // Actualiza en formData
-    }
   };
 
   const sendEmailVerificationPin = async () => {
@@ -247,22 +238,49 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
     return `${censoredLocal}@${censoredDomain}`;
   };
 
+  const handleImageChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: 'profileImage' | 'bannerImage',
+    setFieldValue: (field: string, value: any) => void
+  ) => {
+    if (!event.target.files?.length) return;
+  
+    const file = event.target.files[0];
+    const previewUrl = URL.createObjectURL(file);
+  
+    setFormData((prev) => ({ ...prev, [type]: previewUrl })); // URL de previsualización
+    setFieldValue(type, file); // Guardar el archivo en el formData
+  };
+
   // Final step data submittion (user registration)
   const handleSubmit = async (values: any) => {
-    // 'finalData' is the data to be submitted (userData)
-    const { verificationPin, ...finalData } = { ...formData, ...values };
+    const { verificationPin, profileImage, bannerImage, ...finalData } = { ...formData, ...values };
     setIsLoading(true);
-
+  
     try {
-      const res = await createUser({ userData: finalData });
+      const formData = new FormData();
+      if (profileImage instanceof File) formData.append("files", profileImage);
+      if (bannerImage instanceof File) formData.append("files", bannerImage);
+  
+      const uploadResponse = await uploadFiles(formData);
+  
+      // Actualizar las URLs en el formulario
+      const profileImageUrl = uploadResponse[0]?.data?.url ?? null;
+      const bannerImageUrl = uploadResponse[1]?.data?.url ?? null;
+  
+      const finalUserData = {
+        ...finalData,
+        profileImage: profileImageUrl,
+        bannerImage: bannerImageUrl,
+      };
+  
+      const res = await createUser({ userData: finalUserData });
       showMessage(res);
     } catch (error) {
       showMessage(error instanceof Error ? error.message : "Error desconocido al registrar el usuario");
     }
-
+  
     setIsLoading(false);
-
-    // console.log(finalData)
   };
 
   return (
@@ -317,18 +335,34 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
             {/* Paso 4: Revisión de datos y registro */}
             {currentStep === 2 && (
               <>
+                {/* Hidden inputs */}
+                <input
+                  ref={BannerImageRef}
+                  type="file"
+                  hidden
+                  onChange={(e) => handleImageChange(e, 'bannerImage', setFieldValue)}
+                />
+                <input
+                  ref={ProfileImageRef}
+                  type="file"
+                  hidden
+                  onChange={(e) => handleImageChange(e, 'profileImage', setFieldValue)}
+                />
+
                 <div className="w-full">
-                  <OurUploadButton type='profileImage' setFormData={setFormData} setFieldValue={setFieldValue} />
-                  <OurUploadButton type='bannerImage' setFormData={setFormData} setFieldValue={setFieldValue} />
                   {/* header */}
                   <div className="relative w-full pb-[30%] left-0">
+                    {/* banner image */}
                     <img
+                      onClick={() => BannerImageRef?.current?.click()}
                       src={formData?.bannerImage ? formData?.bannerImage : "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg"}
-                      className="absolute top-0 w-full object-cover h-full rounded-b-lg"
+                      className="cursor-pointer absolute top-0 w-full object-cover h-full rounded-b-lg hover:brightness-90 duration-100"
                     />
                     <div className='z-50 absolute flex justify-start items-end left-3 top-[85%] gap-2'>
                       <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg">
+                        {/* profile image */}
                         <img
+                          onClick={() => ProfileImageRef?.current?.click()}
                           src={formData?.profileImage ? formData?.profileImage : "/default_pfp.jpg"}
                           className="w-full h-full object-cover cursor-pointer hover:brightness-90 duration-100"
                         />
@@ -362,11 +396,12 @@ const RegisterForm = ({ setShowRegister }: RegisterFormProps) => {
                   </button>
                 )}
                 <button
-                  disabled={currentStep === 1 && !emailVerified}
+                  disabled={isLoading || (currentStep === 1 && !emailVerified)}
                   type="submit"
-                  className={`${currentStep === 1 && !emailVerified ? "opacity-60 pointer-events-none" : "opacity-100"} flex justify-center items-center py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none`}
+                  className={`${isLoading || (currentStep === 1 && !emailVerified) ? "opacity-60 pointer-events-none" : "opacity-100"} flex justify-center items-center py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none`}
                 >
-                  {currentStep === steps.length - 1 ? "Registrar" : "Siguiente"}
+                  {isLoading && "Registrando..."}
+                  {!isLoading && currentStep === steps.length - 1 ? "Registrar" : "Siguiente"}
                 </button>
               </div>
 
@@ -400,32 +435,4 @@ const FieldInput = ({ disabled = false, name, label, type = "text", errors, touc
     />
     <ErrorMessage name={name} component="p" className="text-red-500 text-sm" />
   </div>
-);
-
-const OurUploadButton = ({
-  type,
-  setFormData,
-  setFieldValue, // Aceptar setFieldValue desde Formik
-}: {
-  type: "profileImage" | "bannerImage";
-  setFormData: React.Dispatch<React.SetStateAction<FormDataState>>;
-  setFieldValue: (field: string, value: any) => void;
-}) => (
-  <UploadButton<OurFileRouter, "imageUploader">
-    endpoint="imageUploader"
-    onClientUploadComplete={(res) => {
-      if (res && res.length > 0) {
-        const uploadedFileUrl = res[0].url; // Get the url of the file
-
-        // Sincronizar con Formik y formData
-        setFieldValue(type, uploadedFileUrl);
-        setFormData((prev) => ({ ...prev, [type]: uploadedFileUrl }));
-
-        console.log("Upload Completed");
-      }
-    }}
-    onUploadError={(error: Error) => {
-      console.log(`ERROR! ${error.message}`);
-    }}
-  />
 );

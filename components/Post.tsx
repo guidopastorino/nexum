@@ -7,6 +7,8 @@ import { BsPerson, BsThreeDots } from 'react-icons/bs';
 import ResponsiveMenu from './ResponsiveMenu';
 import UserDetailsProfileCard from './UserDetailsProfileCard';
 import { isImage } from '@/utils/detectFileType';
+import { RxLink2 } from "react-icons/rx";
+import { BsPencilSquare } from 'react-icons/bs';
 import HashWords from './HashWords';
 import useToast from '@/hooks/useToast'
 
@@ -150,7 +152,39 @@ const Post = ({
               {/* bookmark */}
               <button className="postButton"><HiOutlineBookmark /></button>
               {/* save */}
-              <button className="postButton"><HiUpload /></button>
+              <ResponsiveMenu
+                trigger={<button className='postButton'><HiUpload /></button>}
+                dropdownMenuOptions={{
+                  canClickOtherElements: false
+                }}
+              >
+                {(menuOpen, setMenuOpen) => (
+                  <>
+                    <div
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="itemClass itemHover"
+                    >
+                      <RxLink2 size={20} />
+                      <span>Copy link</span>
+                    </div>
+                    {/* button to quote the post */}
+                    <div
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="itemClass itemHover"
+                    >
+                      <HiUpload size={20} />
+                      <span>Share post via …</span>
+                    </div>
+                    {media.length > 0 && <div
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="itemClass itemHover"
+                    >
+                      <BsPencilSquare size={20} />
+                      <span>Post media</span>
+                    </div>}
+                  </>
+                )}
+              </ResponsiveMenu>
             </div>
           </div>
         </div>
@@ -319,7 +353,7 @@ export default Post;
 function formatTimeAgo(date: Date) {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
 
-  if(seconds < 3) return "now"
+  if (seconds < 3) return "now"
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
@@ -335,14 +369,11 @@ function formatTimeAgo(date: Date) {
   return `${years}y`;
 }
 
-/* for now it will be string[] and images */
-
-
 const MediaGallery = ({ media }: { media: MediaFile[] }) => {
   const displayMedia = media.slice(0, 4); // Solo mostramos hasta las primeras 4 imágenes
   const extraCount = media.length - 4; // Cantidad de imágenes extra
 
-  if(media.length === 0) return null;
+  if (media.length === 0) return null;
 
   return (
     <div

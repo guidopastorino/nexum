@@ -8,7 +8,6 @@ export const getUserData = async (userId: string): Promise<IUser | null> => {
     console.log("Usuario obtenido:", res);
     return res;
   } catch (error) {
-    console.error();
     return null;
   }
 };
