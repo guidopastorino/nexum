@@ -52,7 +52,7 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
             <ShowUserProfileImage userProfileImageUrl={user?.profileImage ? user?.profileImage : "/default_pfp.jpg"}>
               <img
                 src={user?.profileImage ? user?.profileImage : "/default_pfp.jpg"}
-                className="w-full h-full object-cover cursor-pointer hover:brightness-90 duration-100"
+                className="w-full h-full object-cover object-center cursor-pointer hover:brightness-90 duration-100"
               />
             </ShowUserProfileImage>
           </div>

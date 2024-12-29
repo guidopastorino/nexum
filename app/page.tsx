@@ -4,17 +4,17 @@ import React from 'react';
 import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import Post from '@/components/Post';
 import { PostProps } from '@/types/types';
-import ky from 'ky';
 import Loader from '@/components/Loader';
 import PostSkeleton from '@/components/PostSkeleton';
 import CreatePostFixedButton from '@/components/CreatePostFixedButton';
 import AsideRight from '@/components/AsideRight';
-
-const fetchPosts = async (page: number, pageSize: number): Promise<PostProps[]> => {
-  return await ky.get(`/api/posts?page=${page}&pageSize=${pageSize}`).json();
-};
+import SelectFeedFixedButton from '@/components/SelectFeedFixedButton';
+import { useSession } from 'next-auth/react';
+import { fetchPosts } from '@/utils/fetchFunctions';
 
 const PostsList = () => {
+  const { data: session } = useSession()
+
   const {
     items: posts,
     isLoading,
@@ -25,8 +25,9 @@ const PostsList = () => {
     isFetchingNextPage,
   } = useInfiniteScroll<PostProps>({
     queryKey: ['posts'],
-    fetcher: fetchPosts,
-    pageSize: 5,
+    fetcher: (page, pageSize) => fetchPosts(page, pageSize, session?.user.id || null),
+    pageSize: 35,
+    enabled: !!session?.user.id
   });
 
   if (isLoading) return <div className='w-full flex flex-col justify-start items-start gap-3'>
@@ -35,8 +36,16 @@ const PostsList = () => {
     ))}
   </div>;
 
-
-  if (isError) return <p>Error al cargar los posts: {error instanceof Error ? error.message : "Error al cargar los posts"}</p>;
+  if (isError) {
+    return (
+      <div className="w-full flex flex-col justify-center items-center gap-3 text-gray-600 dark:text-gray-300">
+        <p>Error al cargar los posts:</p>
+        <p>
+          {error instanceof Error ? error.message : "No se encontraron posts disponibles."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -47,6 +56,7 @@ const PostsList = () => {
         {isFetchingNextPage && <div className='flex justify-center items-center p-3'><Loader width={30} height={30} /></div>}
         {!hasNextPage && <div className='flex justify-center items-center p-3 dark:text-neutral-500 text-gray-500'>&#8226;</div>}
         <CreatePostFixedButton />
+        <SelectFeedFixedButton />
       </div>
 
       <AsideRight>

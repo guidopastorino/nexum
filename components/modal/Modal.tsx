@@ -6,9 +6,10 @@ import ReactDOM from 'react-dom';
 interface ModalProps {
   buttonTrigger: React.ReactElement<any, any>;
   children: React.ReactNode;
+  width?: number; /* pixels */
 }
 
-const Modal = ({ buttonTrigger, children }: ModalProps) => {
+const Modal = ({ buttonTrigger, children, width }: ModalProps) => {
   const [modal, setModal] = useState<boolean>(false);
   const [animation, setAnimation] = useState<boolean>(false);
   const ModalRef = useRef<HTMLDivElement | null>(null);
@@ -81,6 +82,8 @@ const Modal = ({ buttonTrigger, children }: ModalProps) => {
     }
   }, [modal]);
 
+  const modalWidth: number = width ? width : 384;
+
   return (
     <>
       {cloneElement(buttonTrigger, { onClick: () => setModal(!modal) })}
@@ -96,7 +99,11 @@ const Modal = ({ buttonTrigger, children }: ModalProps) => {
         >
           <div
             ref={ModalRef}
-            className={`${animation ? 'scale-100' : 'scale-95'} h-auto max-h-[600px] overflow-y-auto w-[90%] max-w-96 shadow-lg rounded-md overflow-hidden duration-200 select-none`}
+            style={{ maxWidth: `${modalWidth}px` }}
+            className={`
+    ${animation ? 'scale-100' : 'scale-95'}
+    h-auto max-h-[600px] overflow-y-auto w-[90%] shadow-lg rounded-md overflow-hidden duration-200 select-none
+  `}
           >
             {children}
           </div>

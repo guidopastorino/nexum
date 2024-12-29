@@ -89,61 +89,95 @@ import generateSqid from '@/utils/generateSqid';
 // ====================================
 
 // Obtener todos los posts
+
 export async function GET(req: Request) {
   try {
     await dbConnect();
 
     const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "35");
     const skip = (page - 1) * pageSize;
+
+    const userId = url.searchParams.get('userId');
+
+    let requestingUser = null;
+
+    if (userId) {
+      requestingUser = await User.findById(userId).select(
+        "pinnedPosts following mutedUsers blockedUsers mutedConversations highlightedPosts"
+      );
+    }
 
     const posts = await Post.find()
       .skip(skip)
       .limit(pageSize)
       .populate({
-        path: 'creator',
-        select: '_id profileImage fullname username',
+        path: "creator",
+        select: "_id profileImage fullname username followers",
       })
       .populate({
-        path: 'repostedFrom',
-        select: '_id maskedId creator communityId feedId content likes media type comments quotedPost createdAt',
+        path: "repostedFrom",
+        select:
+          "_id maskedId creator communityId feedId content likes media type comments quotedPost createdAt",
         populate: [
           {
-            path: 'creator',
-            select: '_id profileImage fullname username'
+            path: "creator",
+            select: "_id profileImage fullname username",
           },
           {
-            path: 'quotedPost',
-            select: '_id maskedId creator content media createdAt',
+            path: "quotedPost",
+            select: "_id maskedId creator content media createdAt",
             populate: {
-              path: 'creator',
-              select: '_id profileImage fullname username'
-            }
-          }
-        ]
+              path: "creator",
+              select: "_id profileImage fullname username",
+            },
+          },
+        ],
       })
       .populate({
-        path: 'quotedPost',
-        select: 'creator maskedId content media createdAt',
-        populate: { path: 'creator', select: '_id profileImage fullname username' },
+        path: "quotedPost",
+        select: "creator maskedId content media createdAt",
+        populate: {
+          path: "creator",
+          select: "_id profileImage fullname username",
+        },
       })
       .populate({
-        path: 'comments',
-        select: '_id content createdAt',
-        model: 'Comment',
+        path: "comments",
+        select: "_id content createdAt",
+        model: "Comment",
       })
-      .select('_id maskedId content media likes type createdAt communityId feedId')
+      .select("_id maskedId content media likes type createdAt communityId feedId")
       .sort({ createdAt: -1 });
 
+    if (!requestingUser) {
+      return NextResponse.json(posts, { status: 200 });
+    }
 
+    const enrichedPosts = posts.map((post) => {
+      const creatorId = post.creator._id.toString();
+      const postId = post._id.toString();
 
-    return NextResponse.json(posts, { status: 200 });
+      return {
+        ...post.toObject(),
+        isFollowing: requestingUser.following.includes(creatorId),
+        isPinned: requestingUser.pinnedPosts?.includes(postId) || false,
+        isHighlighted: requestingUser.highlightedPosts?.includes(postId) || false,
+        isOnList: requestingUser.mutedUsers.includes(creatorId),
+        isUserMuted: requestingUser.mutedUsers.includes(creatorId),
+        isBlockedMuted: requestingUser.blockedUsers.includes(creatorId),
+        isConversationMuted: requestingUser.mutedConversations?.includes(postId) || false,
+      };
+    });
+
+    return NextResponse.json(enrichedPosts, { status: 200 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Error al obtener los posts' }, { status: 500 });
+    return NextResponse.json({ error: "Error al obtener los posts" }, { status: 500 });
   }
 }
+
 
 // Crear un post
 export async function POST(req: Request, res: Response) {

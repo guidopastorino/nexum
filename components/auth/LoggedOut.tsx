@@ -4,7 +4,7 @@
 import { useSession } from "next-auth/react";
 import React from "react";
 
-const LoggedIn = ({ children }: { children: React.ReactNode }) => {
+const LoggedOut = ({ children }: { children: React.ReactNode }) => {
   const { data: session, status } = useSession();
 
   // Renderiza el contenido solo si está logueado
@@ -16,4 +16,4 @@ const LoggedIn = ({ children }: { children: React.ReactNode }) => {
   return null;
 };
 
-export default LoggedIn;
+export default LoggedOut;

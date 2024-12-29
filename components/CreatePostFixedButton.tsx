@@ -5,7 +5,7 @@ import { BsPencilSquare } from 'react-icons/bs';
 import { createPortal } from 'react-dom';
 import Modal from './modal/Modal';
 import useUser from '@/hooks/useUser';
-import { MediaFile } from '@/types/types';
+import { MediaFile, UserState } from '@/types/types';
 import LoggedIn from './auth/LoggedIn';
 import { createPost } from '@/utils/fetchFunctions';
 import { useQueryClient } from 'react-query';
@@ -20,6 +20,9 @@ export interface PostCreationProps {
 }
 
 const CreatePostFixedButton = () => {
+  const [mounted, setMounted] = useState<boolean>(false)
+  useEffect(() => setMounted(true), [])
+
   const user = useUser()
 
   const queryClient = useQueryClient();
@@ -50,11 +53,13 @@ const CreatePostFixedButton = () => {
     setIsLoading(false);
   }
 
+  if (!mounted) return null;
+
   return (
     <LoggedIn>
       {
         createPortal(
-          <Modal buttonTrigger={<button className="fixed bottom-5 right-5 w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600">
+          <Modal buttonTrigger={<button className="fixed bottom-5 right-5 w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
             <BsPencilSquare />
           </button>}>
             <div className="bg-white dark:bg-neutral-800 pt-2">

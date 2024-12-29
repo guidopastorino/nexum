@@ -1,6 +1,37 @@
 import { PostCreationProps } from "@/components/CreatePostFixedButton";
 import { IUser, PostProps } from "@/types/types";
-import ky from "ky"
+import ky, { HTTPError } from "ky"
+
+// the main feed algorithm
+export const fetchPosts = async (page: number, pageSize: number, userId: string | null): Promise<PostProps[]> => {
+  try {
+    console.log({ userId })
+    const url = new URL(`${window.location.origin}/api/posts?page=${page}&pageSize=${pageSize}`);
+
+    // Si existe el userId, lo agregas como parámetro de la URL
+    if (userId) {
+      url.searchParams.append('userId', userId);
+    }
+
+    const response = await ky.get(url.toString());
+    return await response.json();
+  } catch (error) {
+    if (error instanceof HTTPError) {
+      const status = error.response.status;
+
+      if (status === 404) {
+        console.warn("No se encontraron posts disponibles.");
+        return []; // Retornamos un array vacío en caso de 404
+      }
+
+      console.error(`Error HTTP: ${status}`);
+    } else {
+      console.error("Error al realizar la solicitud:", error);
+    }
+
+    throw new Error("No se pudieron cargar los posts. Intente más tarde.");
+  }
+};
 
 export const getUserData = async (userId: string): Promise<IUser | null> => {
   try {
@@ -79,3 +110,28 @@ export const getUserPosts = async (creator: string): Promise<PostProps[]> => {
     return [];
   }
 }
+
+// ======= POST OPTIONS FUNCTIONS =======
+interface DeletePostResponse {
+  message?: string;
+  error?: string;
+}
+
+export const deletePost = async (postId: string): Promise<string> => {
+  try {
+    const res = await ky.delete(`/api/posts/${postId}`);
+
+    if (res.ok) {
+      const data: DeletePostResponse = await res.json(); // Aserción de tipo
+      console.log("Post deleted successfully:", data);
+      return data.message || "Post deleted successfully"; // Mensaje de éxito
+    } else {
+      const errorData: DeletePostResponse = await res.json(); // Aserción de tipo
+      console.error("Error deleting post:", errorData);
+      return errorData.error || "Error desconocido al eliminar el post"; // Error al eliminar el post
+    }
+  } catch (error) {
+    console.error("Network error:", error);
+    return "Error al eliminar el post: " + (error instanceof Error ? error.message : "Desconocido");
+  }
+};

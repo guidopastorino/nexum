@@ -10,7 +10,10 @@ import { isImage } from '@/utils/detectFileType';
 import { RxLink2 } from "react-icons/rx";
 import { BsPencilSquare } from 'react-icons/bs';
 import HashWords from './HashWords';
-import useToast from '@/hooks/useToast'
+import LoggedOut from './auth/LoggedOut';
+import LoggedIn from './auth/LoggedIn';
+import useUser from '@/hooks/useUser';
+import { GuestPostMenu, OwnerPostMenu, OtherUserPostMenu } from '@/components/PostItemsComponent';
 
 // Recibe los datos del post como props
 const Post = ({
@@ -26,9 +29,18 @@ const Post = ({
   media,
   type,
   comments,
-  createdAt
+  createdAt,
+  isBlockedMuted,
+  isConversationMuted,
+  isFollowing,
+  isHighlighted,
+  isOnList,
+  isPinned,
+  isUserMuted
 }: PostProps) => {
   const timeAgo = (time: Date) => formatTimeAgo(new Date(time));
+
+  const user = useUser()
 
   const NormalPost = () => {
     return (
@@ -58,23 +70,40 @@ const Post = ({
             {/* options btn */}
             <div>
               <ResponsiveMenu
-                trigger={<button className="text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8"><BsThreeDots /></button>}
+                trigger={
+                  <button className="text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8">
+                    <BsThreeDots />
+                  </button>
+                }
                 dropdownMenuOptions={{
                   width: 300, // 300px
-                  canClickOtherElements: false
+                  canClickOtherElements: false,
                 }}
               >
                 {(menuOpen, setMenuOpen) => (
                   <>
-                    {Array.from({ length: 7 }).map((_, i) => (
-                      <div
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="itemClass itemHover"
-                      >
-                        <BsPerson size={20} />
-                        <span>Lorem ipsum dolor sit.</span>
-                      </div>
-                    ))}
+                    <LoggedOut>
+                      <GuestPostMenu creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} />
+                    </LoggedOut>
+                    <LoggedIn>
+                      <>
+                        {user.username === creator.username ? (
+                          <OwnerPostMenu userId={creator._id} postId={maskedId} setMenuOpen={setMenuOpen} states={{
+                            isPinned,
+                            isHighlighted,
+                            isOnList,
+                            isConversationMuted,
+                          }} />
+                        ) : (
+                          <OtherUserPostMenu creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} states={{
+                            isFollowing,
+                            isOnList,
+                            isUserMuted,
+                            isBlockedMuted,
+                          }} />
+                        )}
+                      </>
+                    </LoggedIn>
                   </>
                 )}
               </ResponsiveMenu>

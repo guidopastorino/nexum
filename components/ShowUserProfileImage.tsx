@@ -9,7 +9,7 @@ const ShowUserProfileImage = ({ children, userProfileImageUrl }: ShowUserProfile
   const [viewer, setViewer] = useState<boolean>(false);
 
   return (
-    <div>
+    <>
       {React.cloneElement(children as React.ReactElement, { onClick: () => setViewer(!viewer) })}
 
       {viewer && (
@@ -26,7 +26,7 @@ const ShowUserProfileImage = ({ children, userProfileImageUrl }: ShowUserProfile
           />
         </div>
       )}
-    </div>
+    </>
   );
 }
 

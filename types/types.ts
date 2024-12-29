@@ -144,6 +144,14 @@ export interface PostProps {
   type: 'normal' | 'repost' | 'quote';
   comments: string[];
   createdAt: Date;
+  // aditional states
+  isBlockedMuted: boolean;
+  isConversationMuted: boolean;
+  isFollowing: boolean;
+  isHighlighted: boolean;
+  isOnList: boolean;
+  isPinned: boolean;
+  isUserMuted: boolean;
 }
 
 

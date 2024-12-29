@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcrypt';
 
 interface IUser extends Document {
   fullname: string;
@@ -13,6 +13,11 @@ interface IUser extends Document {
   followers: Types.ObjectId[];
   posts: Types.ObjectId[];
   likes: Types.ObjectId[];
+  pinnedPosts: Types.ObjectId[]; // Posts fijados por el usuario
+  highlightedPosts: Types.ObjectId[]; // Posts destacados por el usuario
+  mutedUsers: Types.ObjectId[]; // Usuarios silenciados por el usuario
+  blockedUsers: Types.ObjectId[]; // Usuarios bloqueados por el usuario
+  mutedConversations: Types.ObjectId[]; // Conversaciones silenciadas
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +66,21 @@ const UserSchema: Schema = new Schema(
     likes: [
       { type: Schema.Types.ObjectId, ref: 'Post' }
     ],
+    pinnedPosts: [
+      { type: Schema.Types.ObjectId, ref: 'Post' }
+    ],
+    highlightedPosts: [
+      { type: Schema.Types.ObjectId, ref: 'Post' }
+    ],
+    mutedUsers: [
+      { type: Schema.Types.ObjectId, ref: 'User' }
+    ],
+    blockedUsers: [
+      { type: Schema.Types.ObjectId, ref: 'User' }
+    ],
+    mutedConversations: [
+      { type: Schema.Types.ObjectId, ref: 'Post' }
+    ],
   },
   {
     timestamps: true,
@@ -82,7 +102,6 @@ UserSchema.methods.comparePassword = async function (password: string): Promise<
 
 // Indices para mejorar consultas de seguidores y seguidos
 UserSchema.index({ username: 1, email: 1 });
-UserSchema.index({ email: 1 });
 UserSchema.index({ isVerified: 1 });
 
 const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
