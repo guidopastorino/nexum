@@ -39,7 +39,7 @@ const CreatePostFixedButton = () => {
   const InputMediaFiles = useRef<HTMLInputElement | null>(null);
 
   const [mounted, setMounted] = useState<boolean>(false)
-      
+
   useEffect(() => setMounted(true), [])
 
   const queryClient = useQueryClient();
@@ -60,7 +60,7 @@ const CreatePostFixedButton = () => {
   useEffect(() => {
     setCanPost(!!post.content.length || !!post.media.length);
   }, [post.content, post.media]);
-  
+
 
   const handleCreatePost = async () => {
     setIsLoading(true);
@@ -96,7 +96,7 @@ const CreatePostFixedButton = () => {
       queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
       queryClient.invalidateQueries(['userProfile', session?.user?.id]);
       queryClient.invalidateQueries(['userPosts', session?.user?.id], { refetchActive: true, refetchInactive: true });
-      
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -131,105 +131,102 @@ const CreatePostFixedButton = () => {
   return (
     <LoggedIn>
       {
-        createPortal(
-          <Modal width={500} buttonTrigger={<button className="fixed bottom-5 right-5 w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
-            <BsPencilSquare />
-          </button>}>
-            <div className="bg-white dark:bg-neutral-800 pt-2">
-              {/* carousel */}
-              {post.media.length > 0 && <div className="relative w-full p-2">
-                {/* Botón izquierdo */}
-                {!isFromMobile && showButtonLeft && (
-                  <button
-                    onClick={scrollToLeft}
-                    className="w-10 h-10 text-xl flex justify-center items-center absolute left-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
-                  >
-                    &#8249;
-                  </button>
-                )}
-
-                {/* Contenedor scrollable */}
-                <div
-                  ref={ScrollContainerRef}
-                  className="w-full flex justify-start items-stretch overflow-x-auto gap-4"
-                  style={{ scrollbarWidth: 'none' }}
+        <Modal width={500} buttonTrigger={<button className="w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
+          <BsPencilSquare />
+        </button>}>
+          <div className="bg-white dark:bg-neutral-800 pt-2">
+            {/* carousel */}
+            {post.media.length > 0 && <div className="relative w-full p-2">
+              {/* Botón izquierdo */}
+              {!isFromMobile && showButtonLeft && (
+                <button
+                  onClick={scrollToLeft}
+                  className="w-10 h-10 text-xl flex justify-center items-center absolute left-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
                 >
-                  <>
-                    {post.media.map((el, i) => {
-                      const url = URL.createObjectURL(el)
-                      if (el.type.startsWith('image')) {
-                        return (
-                          <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
-                        )
-                      } else {
-                        return (
-                          <video autoPlay muted loop className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url}></video>
-                        )
-                      }
-                    })}
-                  </>
-                </div>
+                  &#8249;
+                </button>
+              )}
 
-                {/* Botón derecho */}
-                {!isFromMobile && showButtonRight && (
-                  <button
-                    onClick={scrollToRight}
-                    className="w-10 h-10 text-xl flex justify-center items-center absolute right-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
-                  >
-                    &#8250;
-                  </button>
-                )}
-              </div>}
-
-              {/* threading */}
-              <div className="w-full">
-                <ExampleThreadPost profileImage={user.profileImage || ""} setPost={setPost} />
+              {/* Contenedor scrollable */}
+              <div
+                ref={ScrollContainerRef}
+                className="w-full flex justify-start items-stretch overflow-x-auto gap-4"
+                style={{ scrollbarWidth: 'none' }}
+              >
+                <>
+                  {post.media.map((el, i) => {
+                    const url = URL.createObjectURL(el)
+                    if (el.type.startsWith('image')) {
+                      return (
+                        <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
+                      )
+                    } else {
+                      return (
+                        <video autoPlay muted loop className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url}></video>
+                      )
+                    }
+                  })}
+                </>
               </div>
 
-              <div className="bg-red-800 text-white flex justify-start items-start gap-2 p-2 rounded-md m-3">
-                <FiAlertTriangle className='shrink-0' size={25} />
-                <span className='text-sm'>Please note that videos may take longer to upload, and the preferred size is 4MB (or less than 2 minutes long).</span>
-              </div>
+              {/* Botón derecho */}
+              {!isFromMobile && showButtonRight && (
+                <button
+                  onClick={scrollToRight}
+                  className="w-10 h-10 text-xl flex justify-center items-center absolute right-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
+                >
+                  &#8250;
+                </button>
+              )}
+            </div>}
 
-              <div className='w-full flex justify-between items-center p-3 gap-3 sticky bottom-0 backdrop-blur-sm bg-white/70 dark:bg-neutral-800/70'>
-                <div className="flex justify-center items-center gap-1">
-                  <input
-                    ref={InputMediaFiles}
-                    type="file"
-                    multiple
-                    accept="image/*,video/*"
-                    onChange={handleMediaFilesChange}
-                    hidden
-                  />
+            {/* threading */}
+            <div className="w-full">
+              <ExampleThreadPost profileImage={user.profileImage || ""} setPost={setPost} />
+            </div>
 
-                  <button onClick={() => InputMediaFiles.current?.click()} className="postButton">
-                    <MdOutlineImage />
-                  </button>
-                  <button className="postButton">
-                    <MdOutlinePoll />
-                  </button>
-                  <button className="postButton">
-                    <MdOutlineLocationOn />
-                  </button>
-                  <button className="postButton">
-                    <MdOutlineEmojiEmotions />
-                  </button>
-                  <button className="postButton">
-                    <MdOutlineGifBox />
-                  </button>
-                  <button className="postButton">
-                    <MdCalendarMonth />
-                  </button>
-                </div>
+            <div className="bg-red-800 text-white flex justify-start items-start gap-2 p-2 rounded-md m-3">
+              <FiAlertTriangle className='shrink-0' size={25} />
+              <span className='text-sm'>Please note that videos may take longer to upload, and the preferred size is 4MB (or less than 2 minutes long).</span>
+            </div>
 
-                <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
-                  {isLoading ? "Posting..." : "Post"}
+            <div className='w-full flex justify-between items-center p-3 gap-3 sticky bottom-0 backdrop-blur-sm bg-white/70 dark:bg-neutral-800/70'>
+              <div className="flex justify-center items-center gap-1">
+                <input
+                  ref={InputMediaFiles}
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={handleMediaFilesChange}
+                  hidden
+                />
+
+                <button onClick={() => InputMediaFiles.current?.click()} className="postButton">
+                  <MdOutlineImage />
+                </button>
+                <button className="postButton">
+                  <MdOutlinePoll />
+                </button>
+                <button className="postButton">
+                  <MdOutlineLocationOn />
+                </button>
+                <button className="postButton">
+                  <MdOutlineEmojiEmotions />
+                </button>
+                <button className="postButton">
+                  <MdOutlineGifBox />
+                </button>
+                <button className="postButton">
+                  <MdCalendarMonth />
                 </button>
               </div>
+
+              <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
+                {isLoading ? "Posting..." : "Post"}
+              </button>
             </div>
-          </Modal>,
-          document.body
-        )
+          </div>
+        </Modal>
       }
     </LoggedIn>
   )

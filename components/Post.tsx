@@ -21,7 +21,8 @@ import BookmarkButton from './buttons/post/BookmarkButton';
 import { useSession } from 'next-auth/react';
 import QuoteButton from './buttons/post/QuoteButton';
 import RepostButton from './buttons/post/RepostButton';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import MediaGallery from './PostMediaGallery';
 
 // Recibe los datos del post como props

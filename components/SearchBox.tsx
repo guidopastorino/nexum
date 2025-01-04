@@ -3,7 +3,7 @@
 import { PostSearchPaginationProps, SearchResultsResponse, UserSearchPaginationProps } from "@/types/types";
 import ky from "ky";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useRef, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import Loader from "./Loader";

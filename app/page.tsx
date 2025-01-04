@@ -6,7 +6,6 @@ import Post from "@/components/Post";
 import { PostProps } from "@/types/types";
 import Loader from "@/components/Loader";
 import PostSkeleton from "@/components/PostSkeleton";
-import CreatePostFixedButton from "@/components/CreatePostFixedButton";
 import AsideRight from "@/components/AsideRight";
 import { useSession } from "next-auth/react";
 import { fetchPosts } from "@/utils/fetchFunctions";
@@ -72,8 +71,6 @@ const PostsList = () => {
             End of feed
           </div>
         )}
-
-        <CreatePostFixedButton />
       </div>
 
       <AsideRight>

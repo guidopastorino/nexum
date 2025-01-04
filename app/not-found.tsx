@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { BiError } from 'react-icons/bi'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'nextjs-toploader/app'
 
 const NotFound = () => {
   const router = useRouter()

@@ -6,7 +6,7 @@ import { Provider } from "react-redux";
 import { store } from "@/store/index";
 import useAuthStateListener from "@/hooks/useAuthStateListener";
 import { QueryClient, QueryClientProvider } from "react-query";
-import Next13ProgressBar from 'next13-progressbar'
+import NextTopLoader from 'nextjs-toploader';
 import { ThemeProvider } from "next-themes";
 import Toast from '@/components/Toast';
 
@@ -26,7 +26,21 @@ const UseApp = ({ children }: { children: React.ReactNode }) => {
         <Provider store={store}>
           <AuthStateListenerWrapper>
             <QueryClientProvider client={queryClient}>
-              <Next13ProgressBar height="4px" color="#ea580c" options={{ showSpinner: false }} showOnShallow />
+              <NextTopLoader
+                color="#ea580c"
+                initialPosition={0.08}
+                crawlSpeed={200}
+                height={3}
+                crawl={true}
+                showSpinner={false}
+                easing="ease"
+                speed={200}
+                shadow="0 0 10px #2299DD,0 0 5px #2299DD"
+                template='<div class="bar" role="bar"><div class="peg"></div></div> 
+  <div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
+                zIndex={1600}
+                showAtBottom={false}
+              />
               <Toast />
               {/* Para transición al cambiar entre páginas */}
               {children}
