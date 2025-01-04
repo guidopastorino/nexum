@@ -1,5 +1,4 @@
 // pages/api/posts/[id]/bookmark.ts
-import { NextApiRequest } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/utils/api/auth-options/authOptions";
 import { NextResponse } from 'next/server';
@@ -8,7 +7,7 @@ import Post from '@/models/Post';
 import User from '@/models/User';
 import { ObjectId } from 'mongodb';  // Asegúrate de importar ObjectId de MongoDB
 
-export async function POST(req: NextApiRequest, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: { id: string } }) {
   const { id } = params; // ID del post
   const session = await getServerSession(authOptions);
 
