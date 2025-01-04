@@ -19,8 +19,9 @@
     "ky": "^1.7.2",
     "metadata-scraper": "^0.2.61",
     "mongoose": "^8.8.1",
+    "nanoid": "^5.0.9",
     "next": "^14.2.17",
-    "next-auth": "^4.24.10",
+    "next-auth": "^4.24.11",
     "next-themes": "^0.4.3",
     "next13-progressbar": "^1.2.2",
     "nodemailer": "^6.9.16",
@@ -33,7 +34,7 @@
     "uploadthing": "^7.3.0",
     "uuid": "^11.0.2",
     "vaul": "^1.1.1",
-    "yup": "^1.4.0"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -41,7 +42,7 @@
     "@types/next-auth": "^3.15.0",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.16",
-    "@types/react": "^18",
+    "@types/react": "^18.3.18",
     "@types/react-dom": "^18",
     "@types/react-query": "^1.2.9",
     "@types/react-redux": "^7.1.34",

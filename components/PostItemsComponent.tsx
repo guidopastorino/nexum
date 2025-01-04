@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { deletePost } from "@/utils/fetchFunctions";
 import { HiOutlineTrash, HiOutlineEye, HiOutlineExclamationCircle, HiPencil, HiOutlineUsers } from 'react-icons/hi2';
@@ -8,15 +9,17 @@ import { MdOutlineList, MdOutlineAnalytics, MdOutlineBlock } from 'react-icons/m
 import { FaUserPlus, FaUserSlash } from 'react-icons/fa';
 import Link from 'next/link';
 import useToast from '@/hooks/useToast';
-import { useState } from 'react';
 import { TbArrowNarrowLeft } from "react-icons/tb";
 import { IoPeopleOutline } from "react-icons/io5";
 import { PiAtBold } from "react-icons/pi";
 import { FaRegCircleCheck } from "react-icons/fa6";
 import { IoPersonAddOutline } from "react-icons/io5";
 import { IoPersonOutline } from "react-icons/io5";
+import { useFollowUser } from '@/hooks/useFollowUser';
 // current who can reply option
 import { FiCheck } from "react-icons/fi";
+import { usePathname } from 'next/navigation';
+import { usePinPost } from '@/hooks/usePinPost';
 
 // ------------ Menú para usuarios que no han iniciado sesión ------------
 export const GuestPostMenu = ({
@@ -28,6 +31,8 @@ export const GuestPostMenu = ({
   creatorUsername: string;
   setMenuOpen: (open: boolean) => void;
 }) => {
+  const pathname = usePathname()
+
   return (
     <>
       <Link href={`/post/${postId}/interactions`}>
@@ -42,39 +47,42 @@ export const GuestPostMenu = ({
           <span>View hidden replies</span>
         </div>
       </Link>
-      <Link href={`/${creatorUsername}`}>
+      {pathname !== `/${creatorUsername}` && <Link href={`/${creatorUsername}`}>
         <div className="itemClass" onClick={() => setMenuOpen(false)}>
           <BsPerson size={20} />
           <span>Go to @{creatorUsername}'s profile</span>
         </div>
-      </Link>
+      </Link>}
     </>
   );
 };
 
 // ------------ Menú para usuarios autenticados (cuando el usuario es el creador del post) ------------
-export const DeleteItemOption = ({ postId, userId }: { postId: string; userId: string }) => {
+const DeleteItemOption = ({ postId, userId, setMenuOpen }: { postId: string; userId: string, setMenuOpen: (open: boolean) => void }) => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
   const handleDeletePost = async () => {
+    setMenuOpen(false)
     showToast("Deleting post...");
     const res = await deletePost(postId);
     console.log(res);
     showToast("Post deleted successfully");
     queryClient.invalidateQueries(['posts']);
     queryClient.invalidateQueries(['creatorDataHoverCard', userId]);
+    queryClient.invalidateQueries(['userProfile', userId]);
+    queryClient.invalidateQueries(['userPosts', userId], { refetchActive: true, refetchInactive: true });
   };
 
   return (
     <li className="itemClass itemHover" onClick={handleDeletePost}>
-      <HiOutlineTrash size={20} />
-      Delete post
+      <HiOutlineTrash size={20} color='#ef4444' />
+      <span className='text-red-500'>Delete post</span>
     </li>
   );
 };
 
-const ChangeWhoCanReplyOption = ({ postId, setMenuOpen, setDropdownContent }: { postId: string, setMenuOpen: (open: boolean) => void, setDropdownContent: React.Dispatch<React.SetStateAction<"" | "whoCanReply">> }) => {
+const ChangeWhoCanReplyOption = ({ postId, setDropdownContent }: { postId: string, setDropdownContent: React.Dispatch<React.SetStateAction<"" | "whoCanReply">> }) => {
   return (
     <>
       <div className="itemClass" onClick={() => { setDropdownContent('whoCanReply') }}>
@@ -84,17 +92,51 @@ const ChangeWhoCanReplyOption = ({ postId, setMenuOpen, setDropdownContent }: { 
     </>
   )
 }
+// 
+
+const PinPostOption = ({
+  creatorUsername,
+  postId,
+  isPinned: initialIsPinned,
+  setInitialPinnedState,
+  setMenuOpen,
+}: {
+  creatorUsername: string;
+  postId: string;
+  isPinned: boolean;
+  setInitialPinnedState: React.Dispatch<React.SetStateAction<boolean>>;
+  setMenuOpen: (open: boolean) => void;
+}) => {
+  const mutation = usePinPost(creatorUsername, postId, initialIsPinned);
+
+  const handlePinToggle = async () => {
+    const updatedPinState = !initialIsPinned;
+    setInitialPinnedState(updatedPinState);
+    setMenuOpen(false);
+    mutation.mutate();
+  };
+
+  return (
+    <div className="itemClass" onClick={handlePinToggle}>
+      {initialIsPinned ? <BsPinAngleFill size={20} /> : <BsPinAngle size={20} />}
+      <span>{initialIsPinned ? "Unpin from your profile" : "Pin to your profile"}</span>
+    </div>
+  );
+};
 
 export const OwnerPostMenu = ({
+  creatorUsername,
   postId,
   userId,
   states,
   setMenuOpen,
 }: {
+  creatorUsername: string;
   postId: string;
   userId: string;
   states?: {
     isPinned?: boolean;
+    setInitialPinnedState?: React.Dispatch<React.SetStateAction<boolean>>;
     isHighlighted?: boolean;
     isOnList?: boolean;
     isConversationMuted?: boolean;
@@ -106,15 +148,18 @@ export const OwnerPostMenu = ({
   if (!dropdownContent) {
     return (
       <>
-        <DeleteItemOption postId={postId} userId={userId} />
+        <DeleteItemOption postId={postId} userId={userId} setMenuOpen={setMenuOpen} />
         <div className="itemClass" onClick={() => setMenuOpen(false)}>
           <HiPencil size={20} />
           <span>Edit post</span>
         </div>
-        <div className="itemClass" onClick={() => setMenuOpen(false)}>
-          {states?.isPinned ? <BsPinAngleFill size={20} /> : <BsPinAngle size={20} />}
-          <span>{states?.isPinned ? "Unpin from your profile" : "Pin to your profile"}</span>
-        </div>
+        <PinPostOption
+          creatorUsername={creatorUsername}
+          postId={postId}
+          isPinned={states?.isPinned!}
+          setInitialPinnedState={states?.setInitialPinnedState!}
+          setMenuOpen={setMenuOpen}
+        />
         <div className="itemClass" onClick={() => setMenuOpen(false)}>
           <MdOutlineAnalytics size={20} />
           <span>View post analytics</span>
@@ -124,7 +169,7 @@ export const OwnerPostMenu = ({
           <span>Embed post</span>
         </div>
         {/* who can reply item */}
-        <ChangeWhoCanReplyOption postId={postId} setMenuOpen={setMenuOpen} setDropdownContent={setDropdownContent} />
+        <ChangeWhoCanReplyOption postId={postId} setDropdownContent={setDropdownContent} />
         <div className="itemClass" onClick={() => setMenuOpen(false)}>
           <MdOutlineList size={20} />
           <span>{states?.isOnList ? "Remove from Lists" : `Add to Lists`}</span>
@@ -172,28 +217,68 @@ export const OwnerPostMenu = ({
 };
 
 // ------------ Menú para usuarios autenticados (cuando no son el creador del post) ------------
+// En el componente FollowUserOption
+export const FollowUserOption = ({
+  userId,
+  creatorUsername,
+  isFollowing: initialIsFollowing,
+  setInitialFollowState,
+  setMenuOpen,
+}: {
+  userId: string;
+  creatorUsername: string;
+  isFollowing: boolean;
+  setInitialFollowState: React.Dispatch<React.SetStateAction<boolean>>;
+  setMenuOpen: (open: boolean) => void;
+}) => {
+  const mutation = useFollowUser(userId, initialIsFollowing);
+
+  const { showToast } = useToast()
+
+  const handleFollowToggle = async () => {
+    const updatedFollowing = !initialIsFollowing;
+    setInitialFollowState(updatedFollowing);
+    showToast(updatedFollowing ? `Followed @${creatorUsername}` : `Unfollowed @${creatorUsername}`)
+    mutation.mutate();
+  };
+
+  return (
+    <div className="itemClass" onClick={handleFollowToggle}>
+      {initialIsFollowing ? <FaUserSlash size={20} /> : <FaUserPlus size={20} />}
+      <span>{initialIsFollowing ? `Unfollow @${creatorUsername}` : `Follow @${creatorUsername}`}</span>
+    </div>
+  );
+};
+
+// En el componente OtherUserPostMenu
 export const OtherUserPostMenu = ({
+  userId,
   postId,
   creatorUsername,
   states,
   setMenuOpen,
 }: {
+  userId: string;
   postId: string;
   creatorUsername: string;
   states?: {
     isFollowing?: boolean;
+    setInitialFollowState?: React.Dispatch<React.SetStateAction<boolean>>;
     isOnList?: boolean;
     isUserMuted?: boolean;
-    isBlockedMuted?: boolean;
+    isBlocked?: boolean;
   };
   setMenuOpen: (open: boolean) => void;
 }) => {
   return (
     <>
-      <div className="itemClass" onClick={() => setMenuOpen(false)}>
-        {states?.isFollowing ? <FaUserSlash size={20} /> : <FaUserPlus size={20} />}
-        <span>{states?.isFollowing ? `Unfollow @${creatorUsername}` : `Follow @${creatorUsername}`}</span>
-      </div>
+      <FollowUserOption
+        userId={userId}
+        creatorUsername={creatorUsername}
+        isFollowing={states?.isFollowing || false}
+        setInitialFollowState={states?.setInitialFollowState!}
+        setMenuOpen={setMenuOpen}
+      />
       <div className="itemClass" onClick={() => setMenuOpen(false)}>
         <MdOutlineList size={20} />
         <span>{states?.isOnList ? "Remove from Lists" : `Add to Lists`}</span>

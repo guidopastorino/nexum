@@ -1,19 +1,28 @@
 import { MediaFile, PostProps } from '@/types/types';
 import Link from 'next/link';
 // icons
-import { HiHeart, HiOutlineArrowPathRoundedSquare, HiOutlineChatBubbleOvalLeft, HiOutlineBookmark, HiPencil } from "react-icons/hi2";
+import { HiOutlineArrowPathRoundedSquare, HiOutlineChatBubbleOvalLeft, HiBookmark, HiOutlineBookmark, HiPencil } from "react-icons/hi2";
 import { HiUpload } from "react-icons/hi";
 import { BsPerson, BsThreeDots } from 'react-icons/bs';
 import ResponsiveMenu from './ResponsiveMenu';
 import UserDetailsProfileCard from './UserDetailsProfileCard';
 import { isImage } from '@/utils/detectFileType';
 import { RxLink2 } from "react-icons/rx";
+import { BsPin } from "react-icons/bs";
 import { BsPencilSquare } from 'react-icons/bs';
 import HashWords from './HashWords';
 import LoggedOut from './auth/LoggedOut';
 import LoggedIn from './auth/LoggedIn';
 import useUser from '@/hooks/useUser';
 import { GuestPostMenu, OwnerPostMenu, OtherUserPostMenu } from '@/components/PostItemsComponent';
+import { useState } from 'react';
+import LikeButton from './buttons/post/LikeButton';
+import BookmarkButton from './buttons/post/BookmarkButton';
+import { useSession } from 'next-auth/react';
+import QuoteButton from './buttons/post/QuoteButton';
+import RepostButton from './buttons/post/RepostButton';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import MediaGallery from './PostMediaGallery';
 
 // Recibe los datos del post como props
 const Post = ({
@@ -23,14 +32,21 @@ const Post = ({
   communityId,
   feedId,
   content,
-  likes,
   repostedFrom,
   quotedPost,
   media,
   type,
-  comments,
   createdAt,
-  isBlockedMuted,
+  isLiked,
+  likesCount,
+  commentsCount,
+  bookmarksCount,
+  quotesCount,
+  repostsCount,
+  isBookmarked,
+  isReposted,
+  isQuoted,
+  isBlocked,
   isConversationMuted,
   isFollowing,
   isHighlighted,
@@ -38,13 +54,33 @@ const Post = ({
   isPinned,
   isUserMuted
 }: PostProps) => {
+  const [initialFollowState, setInitialFollowState] = useState<boolean>(isFollowing || false)
+  const [initialLikeState, setInitialLikeState] = useState<boolean>(isLiked || false)
+  const [initialLikesCount, setInitialLikesCount] = useState(likesCount);
+  const [initialBookmarkState, setInitialBookmarkState] = useState<boolean>(isBookmarked || false)
+  const [initialRepostState, setInitialRepostState] = useState<boolean>(isReposted || false)
+  const [initialPinnedState, setInitialPinnedState] = useState<boolean>(isPinned || false)
+
+  const handleLikeUpdate = (newLikesCount: number, newLikeState: boolean) => {
+    setInitialLikesCount(newLikesCount);
+    setInitialLikeState(newLikeState);
+  };
+
   const timeAgo = (time: Date) => formatTimeAgo(new Date(time));
 
   const user = useUser()
 
+  const pathname = usePathname()
+
+  // solamente mostrar la marca de "Pinned" cuando estemos la ruta /[username]
+  // es decir, donde se muestran los posts del usuario
+  const showPinnedHero = isPinned && pathname == `/${creator.username}`
+
+  const { data: session, status } = useSession()
+
   const NormalPost = () => {
     return (
-      <div className="flex justify-center items-start gap-2">
+      <div className="flex justify-center items-start gap-3">
         {/* creator profile image */}
         <div className='self-start shrink-0'>
           <UserDetailsProfileCard creatorId={creator._id}>
@@ -71,7 +107,7 @@ const Post = ({
             <div>
               <ResponsiveMenu
                 trigger={
-                  <button className="text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8">
+                  <button className="postButton">
                     <BsThreeDots />
                   </button>
                 }
@@ -88,18 +124,20 @@ const Post = ({
                     <LoggedIn>
                       <>
                         {user.username === creator.username ? (
-                          <OwnerPostMenu userId={creator._id} postId={maskedId} setMenuOpen={setMenuOpen} states={{
-                            isPinned,
+                          <OwnerPostMenu creatorUsername={creator.username} userId={creator._id} postId={_id} setMenuOpen={setMenuOpen} states={{
+                            isPinned: initialPinnedState,
+                            setInitialPinnedState,
                             isHighlighted,
                             isOnList,
                             isConversationMuted,
                           }} />
                         ) : (
-                          <OtherUserPostMenu creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} states={{
-                            isFollowing,
+                          <OtherUserPostMenu userId={creator._id} creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} states={{
+                            isFollowing: initialFollowState,
+                            setInitialFollowState,
                             isOnList,
                             isUserMuted,
-                            isBlockedMuted,
+                            isBlocked,
                           }} />
                         )}
                       </>
@@ -134,17 +172,20 @@ const Post = ({
             <div className="flex justify-center items-center gap-2">
               {/* like */}
               <div className='flex justify-center items-center gap-0.5'>
-                <button className="postButton">
-                  <HiHeart />
-                </button>
-                <span>{likes.length}</span>
+                <LikeButton
+                  initialLikeState={initialLikeState}
+                  setInitialLikeState={setInitialLikeState}
+                  initialLikesLength={initialLikesCount}
+                  postId={_id}
+                  onLikeUpdate={handleLikeUpdate}
+                />
               </div>
               {/* comment */}
               <div className='flex justify-center items-center gap-0.5'>
                 <button className="postButton">
                   <HiOutlineChatBubbleOvalLeft />
                 </button>
-                <span>{comments.length}</span>
+                <span>{commentsCount}</span>
               </div>
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
@@ -157,33 +198,34 @@ const Post = ({
                 >
                   {(menuOpen, setMenuOpen) => (
                     <>
-                      <div
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="itemClass itemHover"
-                      >
-                        <HiOutlineArrowPathRoundedSquare size={20} />
-                        <span>Repost</span>
-                      </div>
+                      <RepostButton
+                        initialRepostState={initialRepostState}
+                        setInitialRepostState={setInitialRepostState}
+                        repostsCount={repostsCount}
+                        postId={_id}
+                        setMenuOpen={setMenuOpen}
+                      />
                       {/* button to quote the post */}
-                      <div
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="itemClass itemHover"
-                      >
-                        <HiPencil size={20} />
-                        <span>Quote</span>
-                      </div>
+                      <QuoteButton setMenuOpen={setMenuOpen} />
                     </>
                   )}
                 </ResponsiveMenu>
+                {repostsCount}
               </div>
             </div>
             <div className="flex justify-center items-center gap-2">
               {/* bookmark */}
-              <button className="postButton"><HiOutlineBookmark /></button>
+              <BookmarkButton
+                initialBookmarkState={initialBookmarkState}
+                setInitialBookmarkState={setInitialBookmarkState}
+                bookmarksCount={bookmarksCount}
+                postId={_id}
+              />
               {/* save */}
               <ResponsiveMenu
                 trigger={<button className='postButton'><HiUpload /></button>}
                 dropdownMenuOptions={{
+                  width: 185,
                   canClickOtherElements: false
                 }}
               >
@@ -204,7 +246,7 @@ const Post = ({
                       <HiUpload size={20} />
                       <span>Share post via …</span>
                     </div>
-                    {media.length > 0 && <div
+                    {media.length > 0 && status !== 'unauthenticated' && <div
                       onClick={() => setMenuOpen(!menuOpen)}
                       className="itemClass itemHover"
                     >
@@ -224,7 +266,7 @@ const Post = ({
   // renderiza el contenido del post reposteado con sus datos
   const RepostedPost = () => {
     return (
-      <div className="flex justify-center items-start gap-2">
+      <div className="flex justify-center items-start gap-3">
         {/* creator profile image */}
         <div className='self-start shrink-0'>
           <UserDetailsProfileCard creatorId={repostedFrom?.creator._id as string}>
@@ -250,7 +292,7 @@ const Post = ({
             {/* options btn */}
             <div>
               <ResponsiveMenu
-                trigger={<button className="text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8"><BsThreeDots /></button>}
+                trigger={<button className="postButton"><BsThreeDots /></button>}
                 dropdownMenuOptions={{
                   width: 300,
                   canClickOtherElements: false
@@ -299,17 +341,14 @@ const Post = ({
             <div className="flex justify-center items-center gap-2">
               {/* like */}
               <div className='flex justify-center items-center gap-0.5'>
-                <button className="postButton">
-                  <HiHeart />
-                </button>
-                <span>{repostedFrom?.likes.length}</span>
+                {/* post like button */}
               </div>
               {/* comment */}
               <div className='flex justify-center items-center gap-0.5'>
                 <button className="postButton">
                   <HiOutlineChatBubbleOvalLeft />
                 </button>
-                <span>{repostedFrom?.comments.length}</span>
+                <span>{repostedFrom?.commentsCount}</span>
               </div>
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
@@ -353,10 +392,32 @@ const Post = ({
     )
   }
 
+  const router = useRouter();
+
+  const handlePostClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const target = e.target as HTMLElement;
+
+    // Verifica si el elemento tiene la clase 'post'
+    if (!target.classList.contains('post')) {
+      e.preventDefault();
+      return;
+    }
+
+    // Si hay texto seleccionado, prevenimos la navegación
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      e.preventDefault();
+      return;
+    }
+
+    // Si ninguna condición se cumple, navegamos hacia la ruta
+    router.push(`/post/${maskedId}`);
+  };
+
   return (
-    <div className='block w-full max-w-lg mx-auto bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700/70 p-3 mb-2'>
+    <div onClick={(e) => handlePostClick(e)} className='post block cursor-pointer w-full border-b border-gray-200 dark:border-neutral-700/70 p-4'>
       {/* si es un repost, indicar quién lo reposteó */}
-      {type === "repost" && <div className='text-black dark:text-neutral-200 flex justify-start items-center gap-2 mb-2'>
+      {type === "repost" && <div className='text-black dark:text-neutral-200 flex justify-start items-center gap-3 mb-2'>
         <div className="w-10 h-10 flex justify-end items-center">
           <HiOutlineArrowPathRoundedSquare />
         </div>
@@ -369,6 +430,13 @@ const Post = ({
             </Link>
           </UserDetailsProfileCard>
         </span>
+      </div>}
+
+      {showPinnedHero && <div className='text-black dark:text-neutral-200 flex justify-start items-center gap-3 mb-2'>
+        <div className="w-10 h-10 flex justify-end items-center">
+          <BsPin />
+        </div>
+        <span>Pinned</span>
       </div>}
 
       {/* post content */}
@@ -385,7 +453,7 @@ function formatTimeAgo(date: Date) {
   if (seconds < 3) return "now"
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 60) return `${minutes}min`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
@@ -393,51 +461,7 @@ function formatTimeAgo(date: Date) {
   const weeks = Math.floor(days / 7);
   if (weeks < 4) return `${weeks}w`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo`;
+  if (months < 12) return `${months}m`;
   const years = Math.floor(days / 365);
   return `${years}y`;
 }
-
-const MediaGallery = ({ media }: { media: MediaFile[] }) => {
-  const displayMedia = media.slice(0, 4); // Solo mostramos hasta las primeras 4 imágenes
-  const extraCount = media.length - 4; // Cantidad de imágenes extra
-
-  if (media.length === 0) return null;
-
-  return (
-    <div
-      className={`grid gap-2 ${media.length === 1
-        ? 'grid-cols-1'
-        : media.length === 2
-          ? 'grid-cols-2'
-          : media.length === 3
-            ? 'grid-cols-3 grid-rows-2'
-            : 'grid-cols-2'
-        }`}
-    >
-      {displayMedia.map((file: MediaFile, i: number) => (
-        <div
-          key={i}
-          className={`relative overflow-hidden rounded-lg ${media.length === 3
-            ? i === 0
-              ? 'col-span-2 row-span-2' // Primer archivo ocupa la mitad izquierda
-              : 'col-span-1' // Los otros dos ocupan la mitad derecha
-            : ''
-            }`}
-        >
-          {isImage(file)
-            ? <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-            : <video src={file.url} controls className="w-full h-full object-cover"></video>
-          }
-
-          {/* Mostrar el overlay "+n" en la última imagen si hay más de 4 */}
-          {i === 3 && extraCount > 0 && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-2xl font-bold">
-              +{extraCount}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};

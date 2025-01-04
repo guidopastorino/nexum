@@ -5,5 +5,6 @@ export const config = {
     "/bookmarks",
     "/messages",
     "/notifications",
+    "/settings/:path*",
   ],
 };

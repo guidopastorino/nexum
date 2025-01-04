@@ -4,173 +4,31 @@ import { NextResponse } from 'next/server';
 import '@/models/';
 import User from '@/models/User';
 import generateSqid from '@/utils/generateSqid';
-
-// Paginación basada en 'cursores' (cursor paginations)
-// ========================================
-// Obtener todos los posts
-// Paginación basada en 'cursores' (cursor paginations)
-// URL de ejemplo con cursor:
-// http://localhost:3000/api/posts?pageSize=5&cursor=2024-11-17T09:00:00.000Z
-// (Se debe cambiar el fetch en /app/page.tsx y el hook de useInfiniteScroll (considerar que se usa para cualquier componente))
-// export async function GET(req: Request) {
-//   try {
-//     await dbConnect();
-
-//     const url = new URL(req.url);
-//     const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
-//     const cursor = url.searchParams.get('cursor'); // Referencia para paginación basada en cursor
-
-//     const matchStage = cursor
-//       ? { createdAt: { $lt: new Date(cursor) } }
-//       : {}; // Si no hay cursor, no aplica filtro
-
-//     // Usar un pipeline de agregación para optimizar la consulta
-//     const posts = await Post.aggregate([
-//       { $match: matchStage }, // Filtrar posts según el cursor
-//       { $sort: { createdAt: -1 } }, // Ordenar por fecha de creación (más reciente primero)
-//       { $limit: pageSize }, // Limitar resultados al tamaño de página
-//       {
-//         $lookup: {
-//           from: 'users', // Relación con la colección de usuarios
-//           localField: 'creator',
-//           foreignField: '_id',
-//           as: 'creatorInfo',
-//         },
-//       },
-//       { $unwind: '$creatorInfo' }, // Descomponer el array de usuarios
-//       {
-//         $lookup: {
-//           from: 'posts', // Relación con reposts
-//           localField: 'repostedFrom',
-//           foreignField: '_id',
-//           as: 'repostedFromInfo',
-//         },
-//       },
-//       { $unwind: { path: '$repostedFromInfo', preserveNullAndEmptyArrays: true } },
-//       {
-//         $lookup: {
-//           from: 'comments', // Relación con comentarios
-//           localField: 'comments',
-//           foreignField: '_id',
-//           as: 'commentsInfo',
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 1,
-//           maskedId: 1,
-//           content: 1,
-//           media: 1,
-//           likes: 1,
-//           type: 1,
-//           createdAt: 1,
-//           communityId: 1,
-//           feedId: 1,
-//           'creatorInfo._id': 1,
-//           'creatorInfo.profileImage': 1,
-//           'creatorInfo.fullname': 1,
-//           'creatorInfo.username': 1,
-//           repostedFrom: '$repostedFromInfo',
-//           comments: { $slice: ['$commentsInfo', 3] }, // Limitar los comentarios a 3 por post
-//         },
-//       },
-//     ]);
-
-//     // Incluir el siguiente cursor en la respuesta para la paginación
-//     const nextCursor = posts.length > 0 ? posts[posts.length - 1].createdAt : null;
-
-//     return NextResponse.json({ posts, nextCursor }, { status: 200 });
-//   } catch (error) {
-//     console.error(error);
-//     return NextResponse.json({ error: 'Error al obtener los posts' }, { status: 500 });
-//   }
-// }
-//
-// ====================================
-
+import { getServerSession } from 'next-auth';
+import { authOptions } from "@/utils/api/auth-options/authOptions";
+import { postPopulateOptions, postSelectionFields } from '@/utils/api/postPopulateOptions';
+import { mapPostData } from '@/utils/api/mapPostData';
 // Obtener todos los posts
 
 export async function GET(req: Request) {
   try {
     await dbConnect();
+    const session = await getServerSession(authOptions);
+    const userId = session?.user.id || null;
 
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("pageSize") || "35");
     const skip = (page - 1) * pageSize;
 
-    const userId = url.searchParams.get('userId');
-
-    let requestingUser = null;
-
-    if (userId) {
-      requestingUser = await User.findById(userId).select(
-        "pinnedPosts following mutedUsers blockedUsers mutedConversations highlightedPosts"
-      );
-    }
-
     const posts = await Post.find()
       .skip(skip)
       .limit(pageSize)
-      .populate({
-        path: "creator",
-        select: "_id profileImage fullname username followers",
-      })
-      .populate({
-        path: "repostedFrom",
-        select:
-          "_id maskedId creator communityId feedId content likes media type comments quotedPost createdAt",
-        populate: [
-          {
-            path: "creator",
-            select: "_id profileImage fullname username",
-          },
-          {
-            path: "quotedPost",
-            select: "_id maskedId creator content media createdAt",
-            populate: {
-              path: "creator",
-              select: "_id profileImage fullname username",
-            },
-          },
-        ],
-      })
-      .populate({
-        path: "quotedPost",
-        select: "creator maskedId content media createdAt",
-        populate: {
-          path: "creator",
-          select: "_id profileImage fullname username",
-        },
-      })
-      .populate({
-        path: "comments",
-        select: "_id content createdAt",
-        model: "Comment",
-      })
-      .select("_id maskedId content media likes type createdAt communityId feedId")
+      .populate(postPopulateOptions)
+      .select(postSelectionFields)
       .sort({ createdAt: -1 });
 
-    if (!requestingUser) {
-      return NextResponse.json(posts, { status: 200 });
-    }
-
-    const enrichedPosts = posts.map((post) => {
-      const creatorId = post.creator._id.toString();
-      const postId = post._id.toString();
-
-      return {
-        ...post.toObject(),
-        isFollowing: requestingUser.following.includes(creatorId),
-        isPinned: requestingUser.pinnedPosts?.includes(postId) || false,
-        isHighlighted: requestingUser.highlightedPosts?.includes(postId) || false,
-        isOnList: requestingUser.mutedUsers.includes(creatorId),
-        isUserMuted: requestingUser.mutedUsers.includes(creatorId),
-        isBlockedMuted: requestingUser.blockedUsers.includes(creatorId),
-        isConversationMuted: requestingUser.mutedConversations?.includes(postId) || false,
-      };
-    });
-
+    const enrichedPosts = await mapPostData(posts, userId);
     return NextResponse.json(enrichedPosts, { status: 200 });
   } catch (error) {
     console.error(error);
@@ -178,82 +36,165 @@ export async function GET(req: Request) {
   }
 }
 
+// 
 
 // Crear un post
 export async function POST(req: Request, res: Response) {
+  // Verificar si la sesión está activa
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+  }
+
+  const userId = session.user.id;
+
   try {
+    // Conectar a la base de datos
     await dbConnect();
 
-    // 'creator' es MUY importante recibirlo, ya que es el id del user que se le guardará este post
-    const { creator, communityId, feedId, content, repostedFrom, quotedPost, media, type } = await req.json()
+    // Obtener los datos del request
+    const { communityId, feedId, content, repostedFrom, quotedPost, media, type } = await req.json();
 
-    if (!creator || (!content && media?.length === 0) || !type) {
+    // Validar los datos necesarios para crear un post
+    if ((!content && media?.length === 0) || !type) {
       return NextResponse.json({ message: "Cannot create post with incomplete data" }, { status: 400 });
     }
 
-    // checkear tipo y crear el post en base a las propiedades que debe recibir cada tipo
-    let newPost = null;
+    // Generar maskedId para el post
+    const maskedId = generateSqid();
 
-    // Generar maskedId para el post (sirve para las rutas /post/... del cliente)
-    const maskedId = generateSqid()
+    // Inicializar la variable del nuevo post
+    let newPost = await createNewPost(type, userId, maskedId, content, media, repostedFrom, quotedPost, communityId, feedId);
 
-    // Es como manejar diferentes rutas pero en una sola, asi que la lógica de cada ruta irá dentro de su respectivo condicional
-    if (type === 'normal') {
-      newPost = await new Post({
+    // Si el tipo de post es inválido, retornar error
+    if (!newPost) {
+      return NextResponse.json({ message: "Invalid post type" }, { status: 400 });
+    }
+
+    // Buscar el usuario para asegurarse de que existe
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ message: "Creador del post no encontrado. No es posible crear el post" }, { status: 404 });
+    }
+
+    // Guardar el post en el array 'posts' del usuario
+    user.posts.push(newPost._id);
+
+    // Procesar repost y quotes
+    if (type === 'repost') {
+      if (!repostedFrom) {
+        return NextResponse.json({ message: "RepostedFrom ID is missing" }, { status: 400 });
+      }
+    
+      try {
+        // Manejar el repost
+        await handleRepost(repostedFrom, userId);
+      } catch (error) {
+        console.error("Error handling repost:", error);
+        return NextResponse.json({ message: "Unknown error when handling repost" }, { status: 500 });
+      }
+    } else if (type === 'quote') {
+      if (!quotedPost) {
+        return NextResponse.json({ message: "QuotedPost ID is missing" }, { status: 400 });
+      }
+    
+      try {
+        // Manejar el quote
+        await handleQuote(quotedPost, newPost._id);
+      } catch (error) {
+        console.error("Error handling quote:", error);
+        return NextResponse.json({ message: "Unknown error when handling quote" }, { status: 500 });
+      }
+    }
+
+    // Guardar el usuario con su array actualizado
+    await user.save();
+
+    // Guardar el post en la base de datos
+    await newPost.save();
+
+    return NextResponse.json({ message: "Post creado exitosamente" }, { status: 201 });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
+
+// Función para crear un nuevo post dependiendo del tipo
+async function createNewPost(type: string, userId: string, maskedId: string, content: string, media: any[], repostedFrom: any, quotedPost: any, communityId: string, feedId: string) {
+  switch (type) {
+    case 'normal':
+      return new Post({
         type,
         maskedId,
-        creator,
+        creator: userId,
         content,
         media,
         communityId,
         feedId,
-      })
-    } else if (type === 'quote') {
-      newPost = await new Post({
+      });
+    case 'quote':
+      return new Post({
         type,
         maskedId,
-        creator,
+        creator: userId,
         content,
         media,
         quotedPost,
         communityId,
         feedId,
-      })
-    } else if (type === 'repost') {
-      // Los reposts solamente existen para los feeds (feed de donde se reposteó) o el perfil del usuario
-      newPost = await new Post({
+      });
+    case 'repost':
+      return new Post({
         type,
         maskedId,
-        creator,
+        creator: userId,
         repostedFrom
-      })
-    } else {
-      // Tipo de post inválido
-      return NextResponse.json({ message: "Invalid post type" }, { status: 400 });
-    }
+      });
+    default:
+      return null;
+  }
+}
 
-    // Buscar el usuario que se le guardará este post
-    const user = await User.findById(creator)
+// Función para manejar el repost y agregar el usuario al array de 'reposts'
+async function handleRepost(repostedFromId: string, userId: string) {
+  // Buscar el post original basado en el ID
+  const repostedPost = await Post.findById(repostedFromId);
 
-    if (!user) {
-      return NextResponse.json({ message: "Creador del post no encontrado. No es posible crear el post" }, { status: 404 })
-    }
+  if (!repostedPost) {
+    throw new Error(`Post with ID ${repostedFromId} not found`);
+  }
 
-    // Guardar el post en el array 'posts' del usuario
-    user.posts.push(newPost._id)
+  // Asegurarse de que el array 'reposts' existe y está inicializado
+  if (!repostedPost.reposts) {
+    repostedPost.reposts = [];
+  }
 
-    // Guardar (si corresponde) al post en el array 'posts' del feed y comunidad
-    // ...
+  // Agregar el userId al array de 'reposts' si no está ya presente
+  if (!repostedPost.reposts.includes(userId)) {
+    repostedPost.reposts.push(userId);
+    await repostedPost.save();
+  }
+}
 
-    // Guardar el usuario con su array actualizado
-    await user.save()
+// Función para manejar el quote y agregar el nuevo post al array 'quotes'
+async function handleQuote(quotedPostId: string, newPostId: string) {
+  // Buscar el post original basado en el ID
+  const quotedPost = await Post.findById(quotedPostId);
 
-    // Guardar el post en la base de datos
-    await newPost.save()
+  if (!quotedPost) {
+    throw new Error(`Post with ID ${quotedPostId} not found`);
+  }
 
-    return NextResponse.json({ message: "Post creado exitosamente" }, { status: 201 })
-  } catch (error) {
-    console.log(error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  // Asegurarse de que el array 'quotes' existe y está inicializado
+  if (!quotedPost.quotes) {
+    quotedPost.quotes = [];
+  }
+
+  // Agregar el newPostId al array 'quotes' si no está ya presente
+  if (!quotedPost.quotes.includes(newPostId)) {
+    quotedPost.quotes.push(newPostId);
+    await quotedPost.save();
   }
 }

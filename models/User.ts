@@ -9,11 +9,14 @@ interface IUser extends Document {
   password: string;
   profileImage: string | null;
   bannerImage: string | null;
+  description: string | null;
   following: Types.ObjectId[];
   followers: Types.ObjectId[];
   posts: Types.ObjectId[];
+  feeds: Types.ObjectId[];
   likes: Types.ObjectId[];
   pinnedPosts: Types.ObjectId[]; // Posts fijados por el usuario
+  bookmarkedPosts: Types.ObjectId[]; // Posts guardados por el usuario
   highlightedPosts: Types.ObjectId[]; // Posts destacados por el usuario
   mutedUsers: Types.ObjectId[]; // Usuarios silenciados por el usuario
   blockedUsers: Types.ObjectId[]; // Usuarios bloqueados por el usuario
@@ -54,6 +57,10 @@ const UserSchema: Schema = new Schema(
       type: String,
       default: null,
     },
+    description: {
+      type: String,
+      default: null
+    },
     following: [
       { type: Schema.Types.ObjectId, ref: 'User' }
     ],
@@ -63,10 +70,16 @@ const UserSchema: Schema = new Schema(
     posts: [
       { type: Schema.Types.ObjectId, ref: 'Post' }
     ],
+    feeds: [
+      { type: Schema.Types.ObjectId, ref: 'Feed' }
+    ],
     likes: [
       { type: Schema.Types.ObjectId, ref: 'Post' }
     ],
     pinnedPosts: [
+      { type: Schema.Types.ObjectId, ref: 'Post' }
+    ],
+    bookmarkedPosts: [
       { type: Schema.Types.ObjectId, ref: 'Post' }
     ],
     highlightedPosts: [

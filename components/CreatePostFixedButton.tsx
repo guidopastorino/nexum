@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { BsPencilSquare } from 'react-icons/bs';
+import { IoIosArrowBack, IoMdArrowForward } from "react-icons/io";
+import { FiAlertTriangle } from "react-icons/fi";
 import { createPortal } from 'react-dom';
 import Modal from './modal/Modal';
 import useUser from '@/hooks/useUser';
@@ -10,27 +12,43 @@ import LoggedIn from './auth/LoggedIn';
 import { createPost } from '@/utils/fetchFunctions';
 import { useQueryClient } from 'react-query';
 import useToast from '@/hooks/useToast';
+// icons
+import {
+  MdOutlineImage,
+  MdOutlinePoll,
+  MdOutlineLocationOn,
+  MdOutlineEmojiEmotions,
+  MdOutlineGifBox,
+  MdCalendarMonth
+} from "react-icons/md";
+import { uploadFiles } from '@/actions/uploadFiles';
+import { useSession } from 'next-auth/react';
+import useScroll from '@/hooks/useScroll';
 
 // The necessary props to create a post (normal)
 export interface PostCreationProps {
-  creator: string;
   content: string;
-  media: MediaFile[];
+  media: File[];
   type: string;
 }
 
 const CreatePostFixedButton = () => {
-  const [mounted, setMounted] = useState<boolean>(false)
-  useEffect(() => setMounted(true), [])
-
   const user = useUser()
+  const { data: session } = useSession()
+
+  const InputMediaFiles = useRef<HTMLInputElement | null>(null);
+
+  const [mounted, setMounted] = useState<boolean>(false)
+      
+  useEffect(() => setMounted(true), [])
 
   const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
+  const { showToast } = useToast()
+
   const [post, setPost] = useState<PostCreationProps>({
-    creator: user._id || "",
     content: "",
     media: [],
     type: "normal",
@@ -38,20 +56,75 @@ const CreatePostFixedButton = () => {
 
   const [canPost, setCanPost] = useState<boolean>(false)
 
+  // se puede postear si el contenido no es vacio o la longitud de los archivos no es 0 
   useEffect(() => {
-    setCanPost(!!post.content.length);
-  }, [post.content]);
-
-  const { showToast } = useToast()
+    setCanPost(!!post.content.length || !!post.media.length);
+  }, [post.content, post.media]);
+  
 
   const handleCreatePost = async () => {
     setIsLoading(true);
-    const res = await createPost(post);
-    showToast((res as any).message)
-    queryClient.invalidateQueries(['posts']);
-    queryClient.invalidateQueries(['creatorDataHoverCard', user?._id]);
-    setIsLoading(false);
-  }
+    try {
+      const formData = new FormData();
+
+      // Agregar todos los archivos al FormData
+      post.media.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      // Subir los archivos al servidor
+      const uploadResponse = await uploadFiles(formData);
+
+      // Extraer las URLs de los archivos subidos
+      const filesToBeUploaded = uploadResponse.map((res: any) => res.data);
+
+      const newPost = {
+        content: post.content,
+        media: filesToBeUploaded,
+        type: post.type
+      }
+
+      // Crear el post con el contenido actualizado
+      const res = await createPost(newPost);
+
+      showToast((res as any).message ?? (res as any).error);
+
+      setPost({ content: '', media: [], type: 'normal' })
+
+      // Invalidar caché
+      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
+      queryClient.invalidateQueries(['userProfile', session?.user?.id]);
+      queryClient.invalidateQueries(['userPosts', session?.user?.id], { refetchActive: true, refetchInactive: true });
+      
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMediaFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) return;
+
+    const files = Array.from(event.target.files);
+
+    setPost((prev) => ({
+      ...prev,
+      media: files,
+    }));
+  };
+
+  const ScrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const {
+    isFromMobile,
+    scrollPosition,
+    scrollToLeft,
+    scrollToRight,
+    showButtonLeft,
+    showButtonRight
+  } = useScroll(ScrollContainerRef);
 
   if (!mounted) return null;
 
@@ -59,16 +132,96 @@ const CreatePostFixedButton = () => {
     <LoggedIn>
       {
         createPortal(
-          <Modal buttonTrigger={<button className="fixed bottom-5 right-5 w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
+          <Modal width={500} buttonTrigger={<button className="fixed bottom-5 right-5 w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
             <BsPencilSquare />
           </button>}>
             <div className="bg-white dark:bg-neutral-800 pt-2">
+              {/* carousel */}
+              {post.media.length > 0 && <div className="relative w-full p-2">
+                {/* Botón izquierdo */}
+                {!isFromMobile && showButtonLeft && (
+                  <button
+                    onClick={scrollToLeft}
+                    className="w-10 h-10 text-xl flex justify-center items-center absolute left-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
+                  >
+                    &#8249;
+                  </button>
+                )}
+
+                {/* Contenedor scrollable */}
+                <div
+                  ref={ScrollContainerRef}
+                  className="w-full flex justify-start items-stretch overflow-x-auto gap-4"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  <>
+                    {post.media.map((el, i) => {
+                      const url = URL.createObjectURL(el)
+                      if (el.type.startsWith('image')) {
+                        return (
+                          <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
+                        )
+                      } else {
+                        return (
+                          <video autoPlay muted loop className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url}></video>
+                        )
+                      }
+                    })}
+                  </>
+                </div>
+
+                {/* Botón derecho */}
+                {!isFromMobile && showButtonRight && (
+                  <button
+                    onClick={scrollToRight}
+                    className="w-10 h-10 text-xl flex justify-center items-center absolute right-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
+                  >
+                    &#8250;
+                  </button>
+                )}
+              </div>}
+
               {/* threading */}
               <div className="w-full">
                 <ExampleThreadPost profileImage={user.profileImage || ""} setPost={setPost} />
               </div>
 
-              <div className='w-full flex justify-end items-center p-3 sticky bottom-0 backdrop-blur-sm bg-white/70 dark:bg-neutral-800/70'>
+              <div className="bg-red-800 text-white flex justify-start items-start gap-2 p-2 rounded-md m-3">
+                <FiAlertTriangle className='shrink-0' size={25} />
+                <span className='text-sm'>Please note that videos may take longer to upload, and the preferred size is 4MB (or less than 2 minutes long).</span>
+              </div>
+
+              <div className='w-full flex justify-between items-center p-3 gap-3 sticky bottom-0 backdrop-blur-sm bg-white/70 dark:bg-neutral-800/70'>
+                <div className="flex justify-center items-center gap-1">
+                  <input
+                    ref={InputMediaFiles}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={handleMediaFilesChange}
+                    hidden
+                  />
+
+                  <button onClick={() => InputMediaFiles.current?.click()} className="postButton">
+                    <MdOutlineImage />
+                  </button>
+                  <button className="postButton">
+                    <MdOutlinePoll />
+                  </button>
+                  <button className="postButton">
+                    <MdOutlineLocationOn />
+                  </button>
+                  <button className="postButton">
+                    <MdOutlineEmojiEmotions />
+                  </button>
+                  <button className="postButton">
+                    <MdOutlineGifBox />
+                  </button>
+                  <button className="postButton">
+                    <MdCalendarMonth />
+                  </button>
+                </div>
+
                 <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
                   {isLoading ? "Posting..." : "Post"}
                 </button>
@@ -98,7 +251,7 @@ const ExampleThreadPost = ({ profileImage, setPost }: ExampleThreadPostProps) =>
   }
 
   return (
-    <div className='w-full flex justify-center items-start p-2 gap-2'>
+    <div className='w-full flex justify-center items-start p-3 gap-2'>
       <div className='self-start'>
         <img className='w-10 h-10 object-cover rounded-full' src={profileImage} alt='profile image' />
       </div>

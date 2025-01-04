@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 interface HashWordsProps {
   text: string;
-  maskedId: string; // for "show more" links
+  maskedId?: string; // for "show more" links
 }
 
 const HashWords: React.FC<HashWordsProps> = ({ text, maskedId }) => {

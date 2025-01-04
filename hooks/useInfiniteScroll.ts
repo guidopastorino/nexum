@@ -7,7 +7,9 @@ interface InfiniteScrollProps<T> {
   queryKey: any;
   fetcher: (page: number, pageSize: number) => Promise<T[]>;
   pageSize?: number;
+  refetchOnWindowFocus?: boolean;
   staleTime?: number;
+  cacheTime?: number;
   scrollOffset?: number; // Distancia al final de la página para cargar más
   enabled?: boolean;
 }
@@ -16,7 +18,9 @@ function useInfiniteScroll<T>({
   queryKey,
   fetcher,
   pageSize = 10,
+  refetchOnWindowFocus = false,
   staleTime = 1000 * 60 * 5,
+  cacheTime = 1000 * 60 * 10,
   scrollOffset = 300, // Default: cargar más 300px antes del final de la página
   enabled = true
 }: InfiniteScrollProps<T>) {
@@ -32,8 +36,9 @@ function useInfiniteScroll<T>({
     queryKey,
     ({ pageParam = 1 }) => fetcher(pageParam, pageSize),
     {
+      refetchOnWindowFocus,
       staleTime,
-      // refetchOnWindowFocus: true,
+      cacheTime,
       getNextPageParam: (lastPage, allPages) => {
         return lastPage.length < pageSize ? undefined : allPages.length + 1;
       },

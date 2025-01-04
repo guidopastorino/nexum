@@ -73,7 +73,6 @@ export type MediaFile = {
   size: number; // Tamaño en bytes
   key: string; // Identificador único
   lastModified: number;
-  serverData: ServerData; // Datos del servidor relacionados al archivo
   url: string; // URL para acceder al archivo
   appUrl: string; // URL específica de la aplicación
   customId: string | null; // ID personalizado (opcional)
@@ -98,7 +97,6 @@ export interface PostProps {
   communityId?: string;
   feedId?: string;
   content: string;
-  likes: string[]; // Aquí se mostrarán los likes del post original cuando sea repost
   repostedFrom?: {
     _id: string,
     maskedId: string;
@@ -123,8 +121,8 @@ export interface PostProps {
       createdAt: Date;
     };
     media: MediaFile[],
-    likes: string[],
-    comments: string[],
+    likesCount: number,
+    commentsCount: number,
     createdAt: Date,
   };
   quotedPost?: {
@@ -142,20 +140,59 @@ export interface PostProps {
   };
   media: MediaFile[];
   type: 'normal' | 'repost' | 'quote';
-  comments: string[];
-  createdAt: Date;
+  likesCount: number;
+  commentsCount: number;
+  bookmarksCount: number;
+  quotesCount: number;
+  repostsCount: number;
   // aditional states
-  isBlockedMuted: boolean;
+  // user-post relation
+  isLiked: boolean;
+  isBookmarked: boolean;
+  isReposted: boolean;
+  isQuoted: boolean;
+  // user-user relation
+  isBlocked: boolean;
   isConversationMuted: boolean;
   isFollowing: boolean;
   isHighlighted: boolean;
   isOnList: boolean;
   isPinned: boolean;
   isUserMuted: boolean;
+  // 
+  createdAt: Date;
 }
 
+// For the post's page
+export interface PostPageProps extends PostProps {
+  isFollowingUser: boolean;
+  isFollowedByUser: boolean;
+}
 
-// ¿que campos lleva completo cada post?
-/*
+// followers and following list item list response
+export interface FollowData {
+  _id: string; // ID único del usuario
+  profileImage?: string; // URL de la imagen de perfil (opcional)
+  fullname: string; // Nombre completo del usuario
+  username: string; // Nombre de usuario
+  isVerified: boolean; // Indica si el usuario está verificado
+  description?: string; // Descripción opcional del usuario
+  isFollowingUser: boolean; // Si este usuario sigue al usuario logueado
+  isFollowedByUser: boolean; // Si el usuario logueado sigue a este usuario
+}
 
-*/
+// Feeds
+// Response when displaying the feed item
+export type FeedItemProps = {
+  creatorId: string;
+  creatorUsername: string;
+  creatorProfileImage: string;
+  feedId: string; // id to make request with the feed
+  feedMaskedId: string; // id to make request with the feed
+  feedTitle: string;
+  feedImage: string;
+  feedDescription: string;
+  likedByCount: number;
+  isFeedCreator?: boolean; // for user feeds
+  isFeedLiked?: boolean; // for recommended feeds
+}

@@ -12,20 +12,29 @@ const useScroll = (scrollContainerRef: React.RefObject<HTMLElement>) => {
   // Función para mover el carrusel hacia la izquierda
   const scrollToLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' }); // Ajusta el valor de desplazamiento según lo necesites
+      scrollContainerRef.current.scrollBy({ left: -scrollContainerRef.current.clientWidth, behavior: 'smooth' }); // Ajusta el valor de desplazamiento según lo necesites
     }
   };
 
   // Función para mover el carrusel hacia la derecha
   const scrollToRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' }); // Ajusta el valor de desplazamiento según lo necesites
+      scrollContainerRef.current.scrollBy({ left: scrollContainerRef.current.clientWidth, behavior: 'smooth' }); // Ajusta el valor de desplazamiento según lo necesites
     }
   };
 
+  function detectUserDevice() {
+    if (typeof window !== 'undefined') {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    return false; // Otra opción si no estás en el entorno del navegador
+  }
+
+  const [isFromMobile, setIsFromMobile] = useState<boolean>(detectUserDevice());
+
   // Hook useEffect para actualizar la posición del scroll y los estados de visibilidad de los botones
   useEffect(() => {
-    const container = scrollContainerRef.current;
+    const container = scrollContainerRef?.current;
 
     const handleScroll = () => {
       if (container) {
@@ -49,9 +58,10 @@ const useScroll = (scrollContainerRef: React.RefObject<HTMLElement>) => {
         container.removeEventListener('scroll', handleScroll);
       }
     };
-  }, []);
+  });
 
   return {
+    isFromMobile,
     scrollPosition,
     scrollToLeft,
     scrollToRight,

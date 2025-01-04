@@ -1,17 +1,12 @@
+import { UserProfile } from "@/app/[username]/layout";
 import { PostCreationProps } from "@/components/CreatePostFixedButton";
-import { IUser, PostProps } from "@/types/types";
+import { FollowData, IUser, PostPageProps, PostProps } from "@/types/types";
 import ky, { HTTPError } from "ky"
 
 // the main feed algorithm
-export const fetchPosts = async (page: number, pageSize: number, userId: string | null): Promise<PostProps[]> => {
+export const fetchPosts = async (page: number, pageSize: number): Promise<PostProps[]> => {
   try {
-    console.log({ userId })
     const url = new URL(`${window.location.origin}/api/posts?page=${page}&pageSize=${pageSize}`);
-
-    // Si existe el userId, lo agregas como parámetro de la URL
-    if (userId) {
-      url.searchParams.append('userId', userId);
-    }
 
     const response = await ky.get(url.toString());
     return await response.json();
@@ -21,7 +16,7 @@ export const fetchPosts = async (page: number, pageSize: number, userId: string 
 
       if (status === 404) {
         console.warn("No se encontraron posts disponibles.");
-        return []; // Retornamos un array vacío en caso de 404
+        return [];
       }
 
       console.error(`Error HTTP: ${status}`);
@@ -33,10 +28,9 @@ export const fetchPosts = async (page: number, pageSize: number, userId: string 
   }
 };
 
-export const getUserData = async (userId: string): Promise<IUser | null> => {
+export const getUserData = async (userId: string): Promise<UserProfile | null> => {
   try {
-    const res = await ky.get(`/api/users/${userId}`).json<IUser>();
-    console.log("Usuario obtenido:", res);
+    const res = await ky.get(`/api/users/${userId}`).json<UserProfile>();
     return res;
   } catch (error) {
     return null;
@@ -73,9 +67,9 @@ export const createUser = async ({
 };
 
 // create a 'normal' post
-export const createPost = async ({ creator, content, media, type }: PostCreationProps) => {
+export const createPost = async ({ content, media, type }: PostCreationProps) => {
   try {
-    const res = await ky.post("/api/posts", { json: { creator, content, media, type } });
+    const res = await ky.post("/api/posts", { json: { content, media, type } });
     if (!res.ok) {
       console.error(`Error: ${res.statusText}`);
       const errorData = await res.json();
@@ -91,25 +85,99 @@ export const createPost = async ({ creator, content, media, type }: PostCreation
   }
 }
 
+// Get the data of a post
+export const getPostData = async (postId: string): Promise<PostPageProps | null> => {
+  try {
+    // Usamos ky para hacer una solicitud GET y obtener los datos en formato JSON.
+    const data: PostPageProps = await ky.get(`/api/posts/${postId}`).json();
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching post data:", error);
+    return null;
+  }
+};
+
 // Gets all the posts from a user
 // 'creator' could be the _id or username
-export const getUserPosts = async (creator: string): Promise<PostProps[]> => {
+// pagination responses
+export const getUserPosts = async (
+  creator: string,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<PostProps[]> => {
   try {
-    const res = await ky.get(`/api/users/${creator}/posts`);
+    const url = new URL(
+      `${window.location.origin}/api/users/${creator}/posts?page=${page}&pageSize=${pageSize}`
+    );
+    const res = await fetch(url.toString());
+
     if (!res.ok) {
-      console.error(`Error: ${res.statusText}`);
       const errorData = await res.json();
-      console.error(errorData);
-      return [];
-    } else {
-      const data = await res.json();
-      return data as PostProps[];
+      console.error("Error fetching posts:", errorData.message);
+      throw new Error(errorData.message || "Failed to fetch user posts.");
     }
+
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Network error:", error);
+    console.error("Network or server error:", error);
     return [];
   }
-}
+};
+
+// Gets all the posts liked from a user
+// 'creator' could be the _id or username
+// pagination responses
+export const getUserLikes = async (
+  creator: string,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<PostProps[]> => {
+  try {
+    const url = new URL(
+      `${window.location.origin}/api/users/${creator}/likes?page=${page}&pageSize=${pageSize}`
+    );
+    const res = await fetch(url.toString());
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Error fetching liked posts:", errorData.message);
+      throw new Error(errorData.message || "Failed to fetch user liked posts.");
+    }
+
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Network or server error:", error);
+    return [];
+  }
+};
+
+// Get a list of followers from a user
+// GET /api/users/[id]/followers
+export const getUserFollowers = async (userId: string): Promise<FollowData[]> => {
+  try {
+    const res = await ky.get(`/api/users/${userId}/followers`).json<FollowData[]>();
+    console.log("followers: ", res);
+    return res;
+  } catch (error) {
+    console.error('Error fetching followers:', error);
+    throw new Error('Could not fetch followers');
+  }
+};
+
+// Get a list of followers from a user
+// GET /api/users/[id]/following
+export const getUserFollowing = async (userId: string): Promise<FollowData[]> => {
+  try {
+    const res = await ky.get(`/api/users/${userId}/following`).json<FollowData[]>();
+    return res;
+  } catch (error) {
+    console.error('Error fetching following:', error);
+    throw new Error('Could not fetch following');
+  }
+};
 
 // ======= POST OPTIONS FUNCTIONS =======
 interface DeletePostResponse {
@@ -135,3 +203,5 @@ export const deletePost = async (postId: string): Promise<string> => {
     return "Error al eliminar el post: " + (error instanceof Error ? error.message : "Desconocido");
   }
 };
+
+// pin post

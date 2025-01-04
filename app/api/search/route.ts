@@ -76,7 +76,6 @@ export async function GET(req: Request) {
       .populate({
         path: 'comments',
         select: '_id content createdAt',
-        model: 'Comment',
       })
       .select('content media likes type createdAt communityId feedId')
       .sort({ createdAt: -1 });

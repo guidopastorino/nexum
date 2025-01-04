@@ -8,18 +8,41 @@
   box-sizing: 0;
 }
 
+/* appearance */
+.font-small {
+  font-size: 14px;
+}
+
+.font-default {
+  font-size: 16px;
+}
+
+.font-large {
+  font-size: 18px;
+}
+/*  */
+
 button>* {
   pointer-events: none;
 }
 
+.borderColor{
+	@apply border-gray-200 dark:border-neutral-700/70
+}
+
+/* content first div border right */
+#content-wrapper-child > * {
+	@apply md:border-x border-gray-200 dark:border-neutral-700/70
+}
+
 /* used for causal items hovering */
 .itemHover {
-  @apply hover:bg-gray-200 dark:hover:bg-neutral-700/50 active:bg-gray-300 dark:active:bg-neutral-600/50 duration-100 cursor-pointer whitespace-nowrap;
+  @apply hover:bg-gray-100 dark:hover:bg-neutral-700/15 active:bg-gray-200 dark:active:bg-neutral-600/30 duration-100 cursor-pointer whitespace-nowrap;
 }
 
 /* used for dropdown menu items (here we apply the background) */
 .itemClass {
-  @apply itemHover w-full px-4 py-3 text-lg md:text-sm md:px-3 md:py-2 flex justify-start items-center gap-3 bg-white dark:bg-neutral-800
+  @apply itemHover w-full px-4 py-3 text-lg md:text-sm md:px-3 md:py-2 flex justify-start items-center gap-3 bg-white dark:bg-neutral-900
 }
 
 .itemClass > svg {
@@ -28,7 +51,7 @@ button>* {
 
 /* post buttons */
 .postButton {
-  @apply text-gray-600 dark:text-gray-200 bg-white dark:bg-neutral-800 focus:outline-none rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8 shrink-0
+  @apply text-gray-600 dark:text-gray-200 rounded-full flex justify-center items-center hover:brightness-90 active:brightness-75 duration-100 w-8 h-8 shrink-0
 }
 
 /* active tab class */

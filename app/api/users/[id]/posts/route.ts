@@ -1,77 +1,68 @@
-// /api/users/:id/posts
+// /api/users/[id]/posts
 // Obtiene los posts de un usuario
 
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import dbConnect from "@/lib/dbConnect";
 import Post from "@/models/Post";
 import User from "@/models/User";
-import { isValidObjectId } from "mongoose";
-import { NextResponse } from "next/server";
+import { isValidObjectId, Types } from "mongoose";
+import { authOptions } from "@/utils/api/auth-options/authOptions";
+import { postPopulateOptions, postSelectionFields } from '@/utils/api/postPopulateOptions';
+import { mapPostData } from '@/utils/api/mapPostData';
 
+// params.id es el id del creador de los posts
+// session.user.id es el id del usuario actualmente logeado
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
+    await dbConnect();
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id || null;
 
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "10");
+    const skip = (page - 1) * pageSize;
+
+    const { id } = params;
     if (!id) {
-      return NextResponse.json(
-        { error: "No creator id or username provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No creator id or username provided" }, { status: 400 });
     }
 
-    // Buscar al usuario por ID o username
     const filter = isValidObjectId(id) ? { _id: id } : { username: id };
     const user = await User.findOne(filter);
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Post creator not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post creator not found" }, { status: 404 });
     }
 
-    // Obtener todos los posts del usuario directamente y ordenarlos
-    const posts = await Post.find({ _id: { $in: user.posts } })
-      .populate({
-        path: "creator",
-        select: "_id profileImage fullname username",
-      })
-      .populate({
-        path: "repostedFrom",
-        select:
-          "_id maskedId creator communityId feedId content likes media type comments quotedPost createdAt",
-        populate: [
-          {
-            path: "creator",
-            select: "_id profileImage fullname username",
-          },
-          {
-            path: "quotedPost",
-            select: "_id maskedId creator content media createdAt",
-            populate: {
-              path: "creator",
-              select: "_id profileImage fullname username",
-            },
-          },
-        ],
-      })
-      .populate({
-        path: "quotedPost",
-        select: "creator maskedId content media createdAt",
-        populate: { path: "creator", select: "_id profileImage fullname username" },
-      })
-      .populate({
-        path: "comments",
-        select: "_id content createdAt",
-        model: "Comment",
-      })
-      .select("_id maskedId content media likes type createdAt communityId feedId")
+    const postQuery = Post.find({ _id: { $in: user.posts } })
+      .skip(skip)
+      .limit(pageSize)
+      .populate(postPopulateOptions)
+      .select(postSelectionFields)
       .sort({ createdAt: -1 });
 
-    return NextResponse.json(posts, { status: 200 });
+    if (!userId) {
+      postQuery.limit(5);
+    }
+
+    const posts = await postQuery.exec();
+
+    const pinnedPostId = user.pinnedPosts.length ? user.pinnedPosts[0].toString() : null;
+    if (pinnedPostId) {
+      const pinnedPostIndex = posts.findIndex(post => post._id.toString() === pinnedPostId);
+      if (pinnedPostIndex !== -1) {
+        const [pinnedPost] = posts.splice(pinnedPostIndex, 1);
+        posts.unshift(pinnedPost);
+      }
+    }
+
+    const enrichedPosts = await mapPostData(posts, userId);
+
+    return NextResponse.json(enrichedPosts, { status: 200 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

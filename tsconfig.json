@@ -33,7 +33,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "utils/generateSqid.ts",
-    "build/types/**/*.ts"
+    "build/types/**/*.ts",
   ],
   "exclude": [
     "node_modules"
