@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <UseApp>
           {/* content */}
-          <div id="content-wrapper" className="bg-white dark:bg-neutral-900 duration-200 w-full min-h-dvh">
+          <div id="content-wrapper" className="bg-white dark:bg-neutral-900 duration-300 w-full min-h-dvh">
             <div className="w-full max-w-[1240px] mx-auto grid grid-cols-1 md:grid-cols-[_250px_1fr_]">
               <AsideLeft />
               <div role="main" id="content-wrapper-child" className='w-full grid gap-8 grid-cols-1 xl:grid-cols-[_1fr_350px_]'>
