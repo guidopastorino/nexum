@@ -174,7 +174,6 @@ const Post = ({
               <div className='flex justify-center items-center gap-0.5'>
                 <LikeButton
                   initialLikeState={initialLikeState}
-                  setInitialLikeState={setInitialLikeState}
                   initialLikesLength={initialLikesCount}
                   postId={_id}
                   onLikeUpdate={handleLikeUpdate}
