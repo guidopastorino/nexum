@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import useInfiniteScroll from "@/hooks/useInfiniteScroll";
 import Post from "@/components/Post";
 import { PostProps } from "@/types/types";
-import Loader from "@/components/Loader";
+import Loader, { StrokeLoader } from "@/components/Loader";
 import PostSkeleton from "@/components/PostSkeleton";
 import AsideRight from "@/components/AsideRight";
 import { useSession } from "next-auth/react";
@@ -35,10 +35,8 @@ const PostsList = () => {
 
   if (isLoading)
     return (
-      <div className="w-full flex flex-col justify-start items-start gap-3">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <PostSkeleton key={i} />
-        ))}
+      <div className="w-full flex justify-center items-center p-5">
+        <StrokeLoader />
       </div>
     );
 

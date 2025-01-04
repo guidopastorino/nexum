@@ -103,7 +103,7 @@ const HamburgerMenu = (props: Props) => {
         <CgMenuRightAlt />
       </button> */}
 
-      <button onClick={() => setMenu(true)} className="w-10 h-10 rounded-full border borderColor overflow-hidden">
+      <button onClick={() => setMenu(true)} className="flex md:hidden w-10 h-10 rounded-full border borderColor overflow-hidden">
         <img src={user?.profileImage!} alt="profile image" className="w-full h-full object-cover" />
       </button>
 
