@@ -115,7 +115,7 @@ const HamburgerMenu = (props: Props) => {
               session?.user ? true : (link.route === '/' || link.route === '/explore' || link.route === '/feeds' || link.route === '/communities')
             )
             .map((el: NavigationLinkProps, i: number) => (
-              <li key={i} className='list-none mb-2'>
+              <li key={i} className='list-none mb-2' onClick={() => setAnimation(false)}>
                 <Link href={el.route} className={`${el.route === pathname ? "bg-gray-200 dark:bg-neutral-800/70" : ""} flex justify-start items-center gap-3 px-5 py-2 itemHover rounded-full`}>
                   <div className='w-6 h-6 overflow-hidden shrink-0 flex justify-center items-center'>
                     {el.route === pathname
