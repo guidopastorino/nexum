@@ -16,13 +16,7 @@ import useUser from '@/hooks/useUser';
 import { PiGear, PiGearFill } from 'react-icons/pi';
 import AuthModal from './modal/AuthModal';
 import { IoMdLogIn } from "react-icons/io";
-
-type NavigationLinkProps = {
-  icon: React.ReactNode;
-  activeIcon: React.ReactNode;
-  title: string;
-  route: string;
-};
+import { NavigationLinkProps } from '@/types/types';
 
 const AsideLeft = () => {
   const { data: session, status } = useSession();

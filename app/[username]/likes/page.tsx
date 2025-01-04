@@ -26,6 +26,9 @@ const LikedPostsList = ({ params }: { params: { username: string } }) => {
     queryKey: ["userLikes", username],
     fetcher: (page, pageSize) => getUserLikes(username, page, pageSize),
     pageSize: 10,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    cacheTime: 0,
   });
 
   if (isLoading) {

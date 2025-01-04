@@ -196,3 +196,11 @@ export type FeedItemProps = {
   isFeedCreator?: boolean; // for user feeds
   isFeedLiked?: boolean; // for recommended feeds
 }
+
+// aside left navlinks and hamburger menu navlinks type
+export type NavigationLinkProps = {
+  icon: React.ReactNode;
+  activeIcon: React.ReactNode;
+  title: string;
+  route: string;
+};
