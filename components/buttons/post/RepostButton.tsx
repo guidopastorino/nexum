@@ -1,88 +1,104 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HiOutlineArrowPathRoundedSquare } from 'react-icons/hi2';
 import ky from 'ky';
 import useToast from '@/hooks/useToast';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from 'react-query';
+import AuthModal from '@/components/modal/AuthModal';
 
 type RepostButtonProps = {
   initialRepostState: boolean;
-  setInitialRepostState: React.Dispatch<React.SetStateAction<boolean>>;
-  repostsCount: number;
+  initialRepostsLength: number;
   postId: string;
+  onRepostUpdate: (newRepostsCount: number, newRepostState: boolean) => void;
   setMenuOpen: (open: boolean) => void;
 };
 
-const RepostButton: React.FC<RepostButtonProps> = ({
+const RepostButton = ({
   initialRepostState,
-  setInitialRepostState,
-  repostsCount,
+  initialRepostsLength,
   postId,
-  setMenuOpen
-}) => {
-  const { data: session } = useSession()
-  const [optimisticRepostsCount, setOptimisticRepostsCount] = useState(repostsCount);
-  const [isLoading, setIsLoading] = useState(false);
-
+  onRepostUpdate,
+  setMenuOpen,
+}: RepostButtonProps) => {
+  const [reposted, setReposted] = useState(initialRepostState);
+  const [repostsCount, setRepostsCount] = useState(initialRepostsLength);
+  const { data: session } = useSession();
   const { showToast } = useToast();
-
   const queryClient = useQueryClient();
 
-  // Función para manejar el clic en el botón de repost
-  const handleRepostClick = async () => {
-    setMenuOpen(false);
-  
-    // Actualizar estado optimista
-    const newRepostState = !initialRepostState; // El nuevo estado que queremos
-    setInitialRepostState(newRepostState);
-    setOptimisticRepostsCount(
-      optimisticRepostsCount + (newRepostState ? 1 : -1)
-    );
-  
-    setIsLoading(true);
-  
+  useEffect(() => {
+    setReposted(initialRepostState); // Sincroniza el estado inicial
+  }, [initialRepostState]);
+
+  const handleRepost = async () => {
+    if (!session) {
+      return;
+    }
+
     try {
-      if (newRepostState) {
-        // Hacer POST para "Repost"
-        const response = await ky.post('/api/posts/', {
-          json: { repostedFrom: postId, type: "repost" },
-        });
-        if (!response.ok) throw new Error("Failed to repost");
-  
-        showToast("Reposted");
-      } else {
-        // Hacer DELETE para "Undo Repost"
-        const response = await ky.delete(`/api/posts/${postId}`);
-        if (!response.ok) throw new Error("Failed to undo repost");
-  
-        showToast("Repost removed");
-      }
-  
-      // Invalidar queries relacionadas
-      // queryClient.invalidateQueries(['posts']);
+      setRepostsCount((prev) => prev + 1);
+      setReposted(true);
+      onRepostUpdate(repostsCount + 1, true);
+      await ky.post(`/api/posts/`, { json: { repostedFrom: postId, type: 'repost' } });
       queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
       queryClient.invalidateQueries(['userProfile', session?.user?.id]);
-      queryClient.invalidateQueries(['userPosts', session?.user?.id], {
-        refetchActive: true,
-        refetchInactive: true,
-      });
+      queryClient.invalidateQueries(['userPosts', session?.user?.id]);
+      showToast("Reposted");
     } catch (error) {
-      // Revertir estado optimista en caso de error
-      setInitialRepostState(!newRepostState);
-      setOptimisticRepostsCount(
-        optimisticRepostsCount - (newRepostState ? 1 : -1)
-      );
-      console.error("Error handling repost:", error);
-      showToast(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
+      console.error(error);
+      setRepostsCount((prev) => prev - 1);
+      setReposted(false);
+      onRepostUpdate(Math.max(repostsCount - 1, 0), false);
+      showToast("Failed to repost");
     }
+
+    setMenuOpen(false)
   };
 
+  const handleUndoRepost = async () => {
+    if (!session) {
+      return;
+    }
+
+    try {
+      setRepostsCount((prev) => prev - 1);
+      setReposted(false);
+      onRepostUpdate(Math.max(repostsCount - 1, 0), false);
+      await ky.delete(`/api/posts/${postId}`);
+      queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
+      queryClient.invalidateQueries(['userProfile', session?.user?.id]);
+      queryClient.invalidateQueries(['userPosts', session?.user?.id]);
+      showToast("Repost removed");
+    } catch (error) {
+      console.error(error);
+      setRepostsCount((prev) => prev + 1);
+      setReposted(true);
+      onRepostUpdate(repostsCount + 1, true);
+      showToast("Failed to undo repost");
+    }
+
+    setMenuOpen(false)
+  };
+
+  // if (!session) {
+  //   return <AuthModal
+  //     buttonTrigger={<div
+  //       className='itemClass itemHover'
+  //     >
+  //       <HiOutlineArrowPathRoundedSquare size={20} />
+  //       <span>Repost</span>
+  //     </div>}
+  //   />
+  // }
+
   return (
-    <div onClick={handleRepostClick} className={`itemClass itemHover ${isLoading ? 'cursor-wait' : ''}`}>
+    <div
+      onClick={reposted ? handleUndoRepost : handleRepost}
+      className={`${reposted ? 'font-bold text-green-600' : ''} itemClass itemHover`}
+    >
       <HiOutlineArrowPathRoundedSquare size={20} />
-      <span>{initialRepostState ? 'Undo Repost' : 'Repost'}</span>
+      <span>{reposted ? "Undo repost" : "Repost"}</span>
     </div>
   );
 };
