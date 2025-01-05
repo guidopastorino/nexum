@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { HiOutlineHashtag } from 'react-icons/hi2';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
+import Logo from './Logo';
 
 const FeedSelector = () => {
   const { data: session } = useSession()
@@ -37,7 +38,7 @@ const FeedSelector = () => {
 
   return (
     <nav className={`
-      sticky top-0 w-full z-50 backdrop-blur-sm dark:bg-neutral-900/70 bg-white/70 duration-300
+      sticky top-0 w-full z-50 backdrop-blur-sm dark:bg-neutral-900/70 bg-white/70 duration-300 border-b borderColor
       ${isHidden ? '-translate-y-[calc(100%-48px)]' : 'translate-y-0'}
     `}>
       <div className="flex flex-col">
@@ -47,7 +48,7 @@ const FeedSelector = () => {
           </div>
 
           <Link href="/">
-            <img className='w-10 h-10 object-contain' src='/logo.png' alt='logo' />
+            <Logo size={30} />
           </Link>
 
           {/* manage pinned feeds btn */}
