@@ -121,8 +121,27 @@ export interface PostProps {
       createdAt: Date;
     };
     media: MediaFile[],
-    likesCount: number,
-    commentsCount: number,
+    // post numbers
+    likesCount: number;
+    commentsCount: number;
+    bookmarksCount: number;
+    quotesCount: number;
+    repostsCount: number;
+    // aditional states:
+    // user-post relation
+    isLiked: boolean;
+    isBookmarked: boolean;
+    isReposted: boolean;
+    isQuoted: boolean;
+    isPinned: boolean;
+    isHighlighted: boolean;
+    isConversationMuted: boolean;
+    // user-user relation
+    isBlocked: boolean;
+    isFollowing: boolean;
+    isOnList: boolean;
+    isUserMuted: boolean;
+    // Dates
     createdAt: Date,
   };
   quotedPost?: {
@@ -140,26 +159,27 @@ export interface PostProps {
   };
   media: MediaFile[];
   type: 'normal' | 'repost' | 'quote';
+  // post numbers
   likesCount: number;
   commentsCount: number;
   bookmarksCount: number;
   quotesCount: number;
   repostsCount: number;
-  // aditional states
+  // aditional states:
   // user-post relation
   isLiked: boolean;
   isBookmarked: boolean;
   isReposted: boolean;
   isQuoted: boolean;
+  isPinned: boolean;
+  isHighlighted: boolean;
+  isConversationMuted: boolean;
   // user-user relation
   isBlocked: boolean;
-  isConversationMuted: boolean;
   isFollowing: boolean;
-  isHighlighted: boolean;
   isOnList: boolean;
-  isPinned: boolean;
   isUserMuted: boolean;
-  // 
+  // dates
   createdAt: Date;
 }
 
