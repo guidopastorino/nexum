@@ -136,6 +136,10 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
           path={`/${params.username}`}
         />
         <TabItem
+          text={"Replies"}
+          path={`/${params.username}/replies`}
+        />
+        <TabItem
           text={"Media"}
           path={`/${params.username}/media`}
         />
@@ -152,7 +156,7 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
           path={`/${params.username}/likes`}
         />
       </div>
-      
+
       {/* pages */}
       {children}
     </div>
