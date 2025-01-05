@@ -6,7 +6,7 @@ export const postPopulateOptions = [
   {
     path: "repostedFrom",
     select:
-      "_id maskedId creator communityId feedId content likes media type comments quotedPost createdAt",
+      "_id maskedId creator communityId feedId content quotedPost media likes comments bookmarks quotes reposts type communityId feedId createdAt",
     populate: [
       {
         path: "creator",
@@ -36,5 +36,6 @@ export const postPopulateOptions = [
   },
 ];
 
+// Base case
 export const postSelectionFields =
   "_id maskedId content media likes comments bookmarks quotes reposts type communityId feedId createdAt";
