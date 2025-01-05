@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 // 
 import { MdHome, MdOutlineHome, MdChecklistRtl, MdOutlinePrivacyTip, MdPrivacyTip, MdPersonOutline } from "react-icons/md";
-import { BsPlusCircle, BsPlusCircleFill } from "react-icons/bs";
+import { BsPencilSquare, BsPlusCircle, BsPlusCircleFill } from "react-icons/bs";
 import { usePathname } from 'next/navigation';
 import { BiSolidHomeCircle, BiHomeCircle } from "react-icons/bi";
 import { MdEmail, MdOutlineEmail, MdPeople, MdOutlinePersonOutline, MdPerson, MdPeopleOutline } from "react-icons/md";
@@ -63,7 +63,11 @@ const NavbarBottom = () => {
   return (
     <div className={`flex md:hidden flex-col z-40 sticky bottom-0 ${isHidden ? 'opacity-45 pointer-events-none' : 'opacity-100 pointer-events-auto'} duration-300`}>
       <div className="w-full flex justify-end items-center p-4">
-        <CreatePostFixedButton />
+        <CreatePostFixedButton trigger={
+          <button className="w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
+            <BsPencilSquare />
+          </button>
+        } />
       </div>
       {/*  */}
       <nav className={"h-14 bg-white dark:bg-neutral-900 w-full border-t dark:border-neutral-600"}>
