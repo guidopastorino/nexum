@@ -15,7 +15,7 @@ import LoggedOut from './auth/LoggedOut';
 import LoggedIn from './auth/LoggedIn';
 import useUser from '@/hooks/useUser';
 import { GuestPostMenu, OwnerPostMenu, OtherUserPostMenu } from '@/components/PostItemsComponent';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LikeButton from './buttons/post/LikeButton';
 import BookmarkButton from './buttons/post/BookmarkButton';
 import { useSession } from 'next-auth/react';
@@ -55,16 +55,28 @@ const Post = ({
   isPinned,
   isUserMuted
 }: PostProps) => {
-  const [initialFollowState, setInitialFollowState] = useState<boolean>(isFollowing || false)
-  const [initialLikeState, setInitialLikeState] = useState<boolean>(isLiked || false)
-  const [initialLikesCount, setInitialLikesCount] = useState(likesCount);
-  const [initialBookmarkState, setInitialBookmarkState] = useState<boolean>(isBookmarked || false)
-  const [initialRepostState, setInitialRepostState] = useState<boolean>(isReposted || false)
+  const [initialFollowState, setInitialFollowState] = useState<boolean>(type === 'repost' ? repostedFrom?.isFollowing! : isFollowing)
+  const [initialLikeState, setInitialLikeState] = useState<boolean>(type === 'repost' ? repostedFrom?.isLiked! : isLiked)
+  const [initialLikesCount, setInitialLikesCount] = useState(type === 'repost' ? repostedFrom?.likesCount! : likesCount);
+  const [initialBookmarkState, setInitialBookmarkState] = useState<boolean>(type === 'repost' ? repostedFrom?.isBookmarked! : isBookmarked)
+  const [initialRepostState, setInitialRepostState] = useState<boolean>(type === 'repost' ? repostedFrom?.isReposted! : isReposted)
+  const [initialRepostsCount, setInitialRepostsCount] = useState(type === 'repost' ? repostedFrom?.repostsCount! : repostsCount);
   const [initialPinnedState, setInitialPinnedState] = useState<boolean>(isPinned || false)
+
+  useEffect(() => {
+    if (type == 'repost') {
+      console.log(isFollowing)
+    }
+  }, [isFollowing])
 
   const handleLikeUpdate = (newLikesCount: number, newLikeState: boolean) => {
     setInitialLikesCount(newLikesCount);
     setInitialLikeState(newLikeState);
+  };
+
+  const handleRepostUpdate = (newRepostsCount: number, newRepoststate: boolean) => {
+    setInitialRepostsCount(newRepostsCount);
+    setInitialRepostState(newRepoststate);
   };
 
   const timeAgo = (time: Date) => formatTimeAgo(new Date(time));
@@ -155,7 +167,7 @@ const Post = ({
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
           {type === 'quote' && quotedPost?._id && <>
-            <Link href={`/post/${quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-800 bg-white dark:border-neutral-700">
+            <Link href={`/post/${quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-900 bg-white dark:border-neutral-700">
               {/* creator info and post date + options btn */}
               <div className='flex justify-start items-center gap-1'>
                 <img className='w-8 h-8 object-cover rounded-full overflow-hidden' src={quotedPost.creator.profileImage} alt={`${quotedPost.creator.fullname}'s profile image`} />
@@ -172,14 +184,12 @@ const Post = ({
           <div className="flex justify-between items-center gap-2">
             <div className="flex justify-center items-center gap-2">
               {/* like */}
-              <div className='flex justify-center items-center gap-0.5'>
-                <LikeButton
-                  initialLikeState={initialLikeState}
-                  initialLikesLength={initialLikesCount}
-                  postId={_id}
-                  onLikeUpdate={handleLikeUpdate}
-                />
-              </div>
+              <LikeButton
+                initialLikeState={initialLikeState}
+                initialLikesLength={initialLikesCount}
+                postId={_id}
+                onLikeUpdate={handleLikeUpdate}
+              />
               {/* comment */}
               <div className='flex justify-center items-center gap-0.5'>
                 <button className="postButton">
@@ -190,27 +200,37 @@ const Post = ({
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
                 <ResponsiveMenu
-                  trigger={<button className='postButton'><HiOutlineArrowPathRoundedSquare /></button>}
+                  trigger={
+                    <button
+                      className={`${initialRepostState ? 'font-bold text-green-600' : ''} itemHover rounded-full px-2 py-1 flex justify-center items-center gap-2`}
+                    >
+                      <HiOutlineArrowPathRoundedSquare />
+                      <span className='text-sm'>{initialRepostsCount}</span>
+                    </button>
+                  }
                   dropdownMenuOptions={{
                     width: 150,
-                    canClickOtherElements: false
+                    canClickOtherElements: false,
+                    positionX: 'center'
                   }}
                 >
                   {(menuOpen, setMenuOpen) => (
                     <>
                       <RepostButton
                         initialRepostState={initialRepostState}
-                        setInitialRepostState={setInitialRepostState}
-                        repostsCount={repostsCount}
+                        initialRepostsLength={initialRepostsCount}
                         postId={_id}
+                        onRepostUpdate={handleRepostUpdate}
                         setMenuOpen={setMenuOpen}
                       />
                       {/* button to quote the post */}
-                      <QuoteButton setMenuOpen={setMenuOpen} />
+                      <QuoteButton
+                        postId={_id}
+                        setMenuOpen={setMenuOpen}
+                      />
                     </>
                   )}
                 </ResponsiveMenu>
-                {repostsCount}
               </div>
             </div>
             <div className="flex justify-center items-center gap-2">
@@ -292,23 +312,42 @@ const Post = ({
             {/* options btn */}
             <div>
               <ResponsiveMenu
-                trigger={<button className="postButton"><BsThreeDots /></button>}
+                trigger={
+                  <button className="postButton">
+                    <BsThreeDots />
+                  </button>
+                }
                 dropdownMenuOptions={{
-                  width: 300,
-                  canClickOtherElements: false
+                  width: 300, // 300px
+                  canClickOtherElements: false,
                 }}
               >
                 {(menuOpen, setMenuOpen) => (
                   <>
-                    {Array.from({ length: 7 }).map((_, i) => (
-                      <div
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="itemClass itemHover"
-                      >
-                        <BsPerson size={20} />
-                        <span>Lorem ipsum dolor sit.</span>
-                      </div>
-                    ))}
+                    <LoggedOut>
+                      <GuestPostMenu creatorUsername={repostedFrom?.creator.username!} postId={repostedFrom?.maskedId!} setMenuOpen={setMenuOpen} />
+                    </LoggedOut>
+                    <LoggedIn>
+                      <>
+                        {user.username === repostedFrom?.creator.username! ? (
+                          <OwnerPostMenu creatorUsername={repostedFrom?.creator.username!} userId={repostedFrom?.creator._id!} postId={repostedFrom?._id!} setMenuOpen={setMenuOpen} states={{
+                            isPinned: initialPinnedState,
+                            setInitialPinnedState,
+                            isHighlighted,
+                            isOnList,
+                            isConversationMuted,
+                          }} />
+                        ) : (
+                          <OtherUserPostMenu userId={repostedFrom?.creator._id!} creatorUsername={repostedFrom?.creator.username!} postId={repostedFrom?.maskedId!} setMenuOpen={setMenuOpen} states={{
+                            isFollowing: initialFollowState,
+                            setInitialFollowState,
+                            isOnList,
+                            isUserMuted,
+                            isBlocked,
+                          }} />
+                        )}
+                      </>
+                    </LoggedIn>
                   </>
                 )}
               </ResponsiveMenu>
@@ -321,7 +360,7 @@ const Post = ({
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
           {repostedFrom?.quotedPost && repostedFrom?.quotedPost?._id && <>
-            <Link href={`/post/${repostedFrom?.quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-800 bg-white dark:border-neutral-700">
+            <Link href={`/post/${repostedFrom?.quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-900 bg-white dark:border-neutral-700">
               {/* creator info and post date + options btn */}
               <div className='flex justify-start items-center gap-1'>
                 <img className='w-8 h-8 object-cover rounded-full overflow-hidden' src={repostedFrom?.quotedPost.creator.profileImage} alt={`${repostedFrom?.quotedPost.creator.fullname}'s profile image`} />
@@ -340,9 +379,12 @@ const Post = ({
           <div className="flex justify-between items-center gap-2">
             <div className="flex justify-center items-center gap-2">
               {/* like */}
-              <div className='flex justify-center items-center gap-0.5'>
-                {/* post like button */}
-              </div>
+              <LikeButton
+                initialLikeState={initialLikeState}
+                initialLikesLength={initialLikesCount}
+                postId={repostedFrom?._id!}
+                onLikeUpdate={handleLikeUpdate}
+              />
               {/* comment */}
               <div className='flex justify-center items-center gap-0.5'>
                 <button className="postButton">
@@ -353,28 +395,34 @@ const Post = ({
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
                 <ResponsiveMenu
-                  trigger={<button className='postButton'><HiOutlineArrowPathRoundedSquare /></button>}
+                  trigger={
+                    <button
+                      className={`${initialRepostState ? 'font-bold text-green-600' : ''} itemHover rounded-full px-2 py-1 flex justify-center items-center gap-2`}
+                    >
+                      <HiOutlineArrowPathRoundedSquare />
+                      <span className='text-sm'>{initialRepostsCount}</span>
+                    </button>
+                  }
                   dropdownMenuOptions={{
                     width: 150,
-                    canClickOtherElements: false
+                    canClickOtherElements: false,
+                    positionX: 'center'
                   }}
                 >
                   {(menuOpen, setMenuOpen) => (
                     <>
-                      <div
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="itemClass itemHover"
-                      >
-                        <HiOutlineArrowPathRoundedSquare size={20} />
-                        <span>Repost</span>
-                      </div>
-                      <div
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="itemClass itemHover"
-                      >
-                        <HiPencil size={20} />
-                        <span>Quote</span>
-                      </div>
+                      <RepostButton
+                        initialRepostState={initialRepostState}
+                        initialRepostsLength={initialRepostsCount}
+                        postId={_id}
+                        onRepostUpdate={handleRepostUpdate}
+                        setMenuOpen={setMenuOpen}
+                      />
+                      {/* button to quote the post */}
+                      <QuoteButton
+                        postId={repostedFrom?._id!}
+                        setMenuOpen={setMenuOpen}
+                      />
                     </>
                   )}
                 </ResponsiveMenu>
@@ -382,9 +430,47 @@ const Post = ({
             </div>
             <div className="flex justify-center items-center gap-2">
               {/* bookmark */}
-              <button className="postButton"><HiOutlineBookmark /></button>
+              <BookmarkButton
+                initialBookmarkState={initialBookmarkState}
+                setInitialBookmarkState={setInitialBookmarkState}
+                bookmarksCount={bookmarksCount}
+                postId={repostedFrom?._id!}
+              />
               {/* save */}
-              <button className="postButton"><HiUpload /></button>
+              <ResponsiveMenu
+                trigger={<button className='postButton'><HiUpload /></button>}
+                dropdownMenuOptions={{
+                  width: 185,
+                  canClickOtherElements: false
+                }}
+              >
+                {(menuOpen, setMenuOpen) => (
+                  <>
+                    <div
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="itemClass itemHover"
+                    >
+                      <RxLink2 size={20} />
+                      <span>Copy link</span>
+                    </div>
+                    {/* button to quote the post */}
+                    <div
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="itemClass itemHover"
+                    >
+                      <HiUpload size={20} />
+                      <span>Share post via …</span>
+                    </div>
+                    {media.length > 0 && status !== 'unauthenticated' && <div
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="itemClass itemHover"
+                    >
+                      <BsPencilSquare size={20} />
+                      <span>Post media</span>
+                    </div>}
+                  </>
+                )}
+              </ResponsiveMenu>
             </div>
           </div>
         </div>
@@ -397,8 +483,13 @@ const Post = ({
   const handlePostClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const target = e.target as HTMLElement;
 
-    // Verifica si el elemento tiene la clase 'post'
-    if (!target.classList.contains('post')) {
+    // Si el click contiene algún elemento del post (incluyendo elementos de menú de opciones, del modal o del drawer) no redirigimos
+    if (
+      ['IMG', 'VIDEO', 'A', 'BUTTON', 'SPAN', 'P', 'SVG'].includes(target.tagName) ||
+      target.classList.contains('itemClass') ||
+      target.classList.contains('modalShadowBackground') ||
+      target.classList.contains('drawerOverlay')
+    ) {
       e.preventDefault();
       return;
     }
@@ -411,7 +502,7 @@ const Post = ({
     }
 
     // Si ninguna condición se cumple, navegamos hacia la ruta
-    router.push(`/post/${maskedId}`);
+    router.push(type === 'repost' ? `/post/${repostedFrom?.maskedId}` : `/post/${maskedId}`);
   };
 
   return (
@@ -426,7 +517,7 @@ const Post = ({
           <span> </span>
           <UserDetailsProfileCard creatorId={creator._id}>
             <Link className='hover:underline' href={`/${creator.username}`}>
-              {creator.username}
+              {user.username === creator.username ? "you" : creator.username}
             </Link>
           </UserDetailsProfileCard>
         </span>
