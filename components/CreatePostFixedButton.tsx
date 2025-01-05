@@ -33,7 +33,7 @@ export interface PostCreationProps {
 }
 
 interface CreatePostFixedButtonProps {
-  trigger: React.ReactElement;
+  trigger: any;
 }
 
 const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }) => {
