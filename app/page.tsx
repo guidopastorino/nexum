@@ -28,7 +28,9 @@ const PostsList = () => {
     queryKey: ["posts", userId || "guest"],
     fetcher: (page, pageSize) => fetchPosts(page, pageSize),
     pageSize: 35,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    cacheTime: 0
   });
 
   useEffect(() => console.log(posts), [posts])
@@ -69,6 +71,7 @@ const PostsList = () => {
             End of feed
           </div>
         )}
+
       </div>
 
       <AsideRight>

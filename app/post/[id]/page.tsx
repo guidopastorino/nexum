@@ -11,6 +11,7 @@ import UserDetailsProfileCard from "@/components/UserDetailsProfileCard";
 import UserProfileButtons from "@/components/buttons/UserProfileButtons";
 import HashWords from "@/components/HashWords";
 import MediaGallery from "@/components/PostMediaGallery";
+import { StrokeLoader } from "@/components/Loader";
 
 const Page = ({ params }: { params: { id: string } }) => {
   const { id: postId } = params;
@@ -26,7 +27,9 @@ const Page = ({ params }: { params: { id: string } }) => {
   );
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="w-full flex justify-center items-center p-5">
+      <StrokeLoader />
+    </div>;
   }
 
   if (isError) {
@@ -84,7 +87,7 @@ const RenderPost = ({
   return (
     <div className="w-full">
       {/*  */}
-      <div className="w-full flex justify-between items-center gap-3 p-3">
+      <div className="w-full flex justify-between items-center gap-3 px-3 pt-3">
         <div className="flex justify-center items-center gap-2">
           <div className="shrink-0 self-start">
             <UserDetailsProfileCard creatorId={creator._id}>
@@ -118,9 +121,14 @@ const RenderPost = ({
         </div>
       </div>
       {/* content and media */}
-      <div className="px-3 pb-3">
-        {content && <HashWords text={content} maskedId={maskedId} />}
-        <MediaGallery media={media ?? []} />
+      <div className="px-3 pb-3 pt-1">
+        <div className="flex flex-col gap-2">
+          {/* {content && <HashWords text={content} maskedId={maskedId} />} */}
+          <div className="w-full break-words overflow-hidden whitespace-pre-wrap">
+            <span>{content}</span>
+          </div>
+          <MediaGallery media={media ?? []} />
+        </div>
       </div>
       <div className="border-y borderColor flex justify-start items-center gap-3 p-3 flex-wrap">
         {formatDate(new Date(createdAt))}

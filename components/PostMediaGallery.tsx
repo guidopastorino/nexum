@@ -21,7 +21,7 @@ const MediaGallery = ({ media }: { media: MediaFile[] }) => {
       {displayMedia.map((file: MediaFile, i: number) => (
         <div
           key={i}
-          className={`relative overflow-hidden rounded-lg ${media.length === 3
+          className={`relative overflow-hidden rounded-md ${media.length === 3
             ? i === 0
               ? 'col-span-2 row-span-2' // Primer archivo ocupa la mitad izquierda
               : 'col-span-1' // Los otros dos ocupan la mitad derecha
@@ -29,8 +29,8 @@ const MediaGallery = ({ media }: { media: MediaFile[] }) => {
             }`}
         >
           {isImage(file)
-            ? <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-            : <video src={file.url} controls className="w-full h-full object-cover"></video>
+            ? <img src={file.url} alt={file.name} className="w-full h-full object-cover rounded-md border borderColor" />
+            : <video src={file.url} controls className="w-full h-full object-cover rounded-md border borderColor"></video>
           }
 
           {/* Mostrar el overlay "+n" en la última imagen si hay más de 4 */}

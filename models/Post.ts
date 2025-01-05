@@ -41,7 +41,7 @@ const PostSchema = new Schema<PostDocument>(
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     comments: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     bookmarks: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    quotes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    quotes: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     reposts: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     repostedFrom: { type: Schema.Types.ObjectId, ref: 'Post' },
     quotedPost: { type: Schema.Types.ObjectId, ref: 'Post' },

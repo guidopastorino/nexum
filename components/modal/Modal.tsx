@@ -95,6 +95,7 @@ const Modal = ({ buttonTrigger, children, width }: ModalProps) => {
             fixed top-0 left-0 flex justify-center py-5 overflow-y-auto
             ${isScreenHeightLarge ? 'items-center' : 'items-start'}
             w-full h-dvh dark:bg-neutral-900/60 bg-neutral-800/60 z-50 duration-300
+            modalShadowBackground
           `}
         >
           <div
