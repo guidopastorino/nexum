@@ -32,7 +32,11 @@ export interface PostCreationProps {
   type: string;
 }
 
-const CreatePostFixedButton = () => {
+interface CreatePostFixedButtonProps {
+  trigger: React.ReactElement;
+}
+
+const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }) => {
   const user = useUser()
   const { data: session } = useSession()
 
@@ -106,12 +110,13 @@ const CreatePostFixedButton = () => {
 
   const handleMediaFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
-
+  
     const files = Array.from(event.target.files);
-
+  
     setPost((prev) => ({
       ...prev,
-      media: files,
+      media: [...prev.media, ...files],
+      // media: files
     }));
   };
 
@@ -131,9 +136,7 @@ const CreatePostFixedButton = () => {
   return (
     <LoggedIn>
       {
-        <Modal width={500} buttonTrigger={<button className="w-12 h-12 flex justify-center items-center rounded-full text-white shadow-lg bg-orange-600 hover:brightness-90 duration-100">
-          <BsPencilSquare />
-        </button>}>
+        <Modal width={500} buttonTrigger={trigger}>
           <div className="bg-white dark:bg-neutral-800 pt-2">
             {/* carousel */}
             {post.media.length > 0 && <div className="relative w-full p-2">
