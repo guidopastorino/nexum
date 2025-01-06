@@ -25,14 +25,6 @@ const AsideLeft = () => {
   const pathname = usePathname();
   const user = useUser();
 
-  useEffect(() => {
-    // Guardamos en el localStorage si el usuario está logueado
-    const isLoggedIn = session?.user ? true : false;
-    if (typeof window !== undefined) {
-      localStorage.setItem('nexumStorage', JSON.stringify({ isLoggedIn }));
-    }
-  }, [session]);
-
   const navLinks: NavigationLinkProps[] = [
     { icon: <BiHomeCircle />, activeIcon: <BiSolidHomeCircle />, title: "Home", route: "/" },
     { icon: <IoSearchOutline />, activeIcon: <IoSearch />, title: "Explore", route: "/explore" },
@@ -46,12 +38,7 @@ const AsideLeft = () => {
     { icon: <PiGear />, activeIcon: <PiGearFill />, title: "Settings", route: `/settings` },
   ];
 
-  // Verificamos si el estado de carga se debe mostrar o no
-  const storedData = JSON.parse(localStorage.getItem('nexumStorage') || '{}');
-  const isLoggedIn = storedData.isLoggedIn;
-
-  // Si el estado es "loading" y no tenemos info de login en el localStorage, mostramos los skeletons
-  if (status === "loading" && isLoggedIn === undefined) {
+  if (status === "loading") {
     return (
       <div className='hidden md:block w-full top-0 sticky overflow-y-auto py-3 h-dvh'>
         {Array.from({ length: navLinks.length }).map((_, i) => (
