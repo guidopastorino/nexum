@@ -28,7 +28,9 @@ const AsideLeft = () => {
   useEffect(() => {
     // Guardamos en el localStorage si el usuario está logueado
     const isLoggedIn = session?.user ? true : false;
-    localStorage.setItem('nexumStorage', JSON.stringify({ isLoggedIn }));
+    if (typeof window !== undefined) {
+      localStorage.setItem('nexumStorage', JSON.stringify({ isLoggedIn }));
+    }
   }, [session]);
 
   const navLinks: NavigationLinkProps[] = [
