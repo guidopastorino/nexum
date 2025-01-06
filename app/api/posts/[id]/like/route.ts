@@ -34,6 +34,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // Agregar el like en el post y en el usuario
     post.likes.push(userId);    // Se agrega el id del usuario al final de los likes del post
+    
     user.likes.unshift(postId); // Se agrega el like del post al inicio de los likes del usuario
 
     await post.save();
