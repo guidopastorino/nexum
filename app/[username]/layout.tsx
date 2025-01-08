@@ -23,28 +23,36 @@ import { StrokeLoader } from '@/components/Loader';
 import PageHeader from '@/components/PageHeader';
 import useTabs from '@/hooks/useTabs';
 import { usePathname } from 'next/navigation';
-
-export interface UserProfile {
-  _id: string;
-  fullname: string;
-  username: string;
-  isVerified: boolean;
-  profileImage: string;
-  bannerImage: string;
-  description: string | null;
-  postsCount: number;
-  followersCount: number;
-  followingCount: number;
-  isFollowingUser?: boolean; // Si el usuario logueado sigue al usuario consultado
-  isFollowedByUser?: boolean; // Si el usuario consultado sigue al usuario logueado
-  createdAt: string;
-  updatedAt: string;
-}
+import { UserProfile } from '@/types/types';
 
 interface ProfileLayoutParams {
   params: { username: string };
   children: React.ReactNode;
 }
+
+// Modificar la función para incluir el tab
+const formatCountAux = (count: number, singular: string, plural: string) => {
+  return `${count} ${count === 1 ? singular : plural}`;
+};
+
+const formatCount = (user: UserProfile, tab: string) => {
+  if (tab === 'Posts') return formatCountAux(user.postsCount, 'post', 'posts');
+  if (tab === 'Replies') return formatCountAux(user.repliesCount, 'reply', 'replies');
+  if (tab === 'Media') return formatCountAux(user.mediaCount, 'media', 'media');
+  if (tab === 'Feeds') return formatCountAux(user.feedsCount, 'feed', 'feeds');
+  if (tab === 'Communities') return formatCountAux(user.communitiesCount, 'community', 'communities');
+  if (tab === 'Likes') return formatCountAux(user.feedsCount, 'like', 'likes'); // Cambié 'postsCount' por 'feedsCount' aquí, por si se refiere a los feeds en "Likes"
+  return formatCountAux(user.postsCount, 'post', 'posts'); // Default "Posts"
+}
+
+const tabNames: { [key: string]: string } = {
+  '': 'Posts',
+  'replies': 'Replies',
+  'media': 'Media',
+  'feeds': 'Feeds',
+  'communities': 'Communities',
+  'likes': 'Likes',
+};
 
 const layout = ({ params, children }: ProfileLayoutParams) => {
   const { data: user, isLoading, error } = useQuery<UserProfile | null>(
@@ -58,21 +66,22 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
     }
   );
 
-  if (isLoading) return <div className="w-full h-full flex justify-center items-center p-5">
-    <StrokeLoader />
-  </div>;
+  const pathname = usePathname();
+  const currentTabKey = pathname.split('/').pop() || '';
+  const currentTabName = tabNames[currentTabKey] || 'Posts';
 
-  if (error) return <div>Error fetching user data</div>
-
-
-  if (!user) return <div>User not found.</div>
-
+  if (isLoading) return <div className="w-full h-full flex justify-center items-center p-5"><StrokeLoader /></div>;
+  if (error) return <div>Error fetching user data</div>;
+  if (!user) return <div>User not found.</div>;
 
   return (
     <div className="w-full">
       {/* header */}
       <PageHeader>
-        <span className='text-xl'>{user.fullname}</span>
+        <div className="flex flex-col justify-center items-start">
+          <span className="text-xl">{user.fullname}</span>
+          <span className="text-xs opacity-60">{formatCount(user, currentTabName)}</span>
+        </div>
       </PageHeader>
 
       {/* profile view (banner, username, followers,...) */}
@@ -131,37 +140,19 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
 
       {/* tabs (posts, media, ...) */}
       <div className="flex justify-start items-center border-y border-gray-200 dark:border-neutral-700/70 overflow-x-auto">
-        <TabItem
-          text={"Posts"}
-          path={`/${params.username}`}
-        />
-        <TabItem
-          text={"Replies"}
-          path={`/${params.username}/replies`}
-        />
-        <TabItem
-          text={"Media"}
-          path={`/${params.username}/media`}
-        />
-        <TabItem
-          text={"Feeds"}
-          path={`/${params.username}/feeds`}
-        />
-        <TabItem
-          text={"Communities"}
-          path={`/${params.username}/communities`}
-        />
-        <TabItem
-          text={"Likes"}
-          path={`/${params.username}/likes`}
-        />
+        <TabItem text={"Posts"} path={`/${params.username}`} />
+        <TabItem text={"Replies"} path={`/${params.username}/replies`} />
+        <TabItem text={"Media"} path={`/${params.username}/media`} />
+        <TabItem text={"Feeds"} path={`/${params.username}/feeds`} />
+        <TabItem text={"Communities"} path={`/${params.username}/communities`} />
+        <TabItem text={"Likes"} path={`/${params.username}/likes`} />
       </div>
 
       {/* pages */}
       {children}
     </div>
-  )
-}
+  );
+};
 
 export default layout;
 
