@@ -60,7 +60,9 @@ const Post = ({
   const [initialLikesCount, setInitialLikesCount] = useState(type === 'repost' ? repostedFrom?.likesCount! : likesCount);
   const [initialBookmarkState, setInitialBookmarkState] = useState<boolean>(type === 'repost' ? repostedFrom?.isBookmarked! : isBookmarked)
   const [initialRepostState, setInitialRepostState] = useState<boolean>(type === 'repost' ? repostedFrom?.isReposted! : isReposted)
-  const [initialRepostsCount, setInitialRepostsCount] = useState(type === 'repost' ? repostedFrom?.repostsCount! : repostsCount);
+  const [initialRepostsCount, setInitialRepostsCount] = useState(
+    type === 'repost' ? (repostedFrom?.repostsCount! + repostedFrom?.quotesCount!) : (repostsCount + quotesCount)
+  ); // repostsCount + quotesCount
   const [initialPinnedState, setInitialPinnedState] = useState<boolean>(isPinned || false)
 
   useEffect(() => {
@@ -166,25 +168,29 @@ const Post = ({
             <MediaGallery media={media ?? []} />
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
-          {type === 'quote' && quotedPost?._id && <>
-            <Link href={`/post/${quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-900 bg-white dark:border-neutral-700">
-              {/* creator info and post date + options btn */}
-              <div className='flex justify-start items-center gap-1'>
-                <img className='w-8 h-8 object-cover rounded-full overflow-hidden' src={quotedPost.creator.profileImage} alt={`${quotedPost.creator.fullname}'s profile image`} />
-                <span className='text-lg whitespace-normal truncate line-clamp-1'>{quotedPost.creator.fullname}</span>
-                <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{quotedPost.creator.username}</span>
-                <span>·</span>
-                <span>{timeAgo(quotedPost.createdAt)}</span>
-              </div>
-              <span>{quotedPost?.content}</span>
-              <MediaGallery media={quotedPost?.media ?? []} />
-            </Link>
-          </>}
+          {type === 'quote'
+            ? quotedPost
+              ? <>
+                <Link href={`/post/${quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-900 bg-white dark:border-neutral-700">
+                  {/* creator info and post date + options btn */}
+                  <div className='flex justify-start items-center gap-1'>
+                    <img className='w-8 h-8 object-cover rounded-full overflow-hidden' src={quotedPost.creator.profileImage} alt={`${quotedPost.creator.fullname}'s profile image`} />
+                    <span className='text-lg whitespace-normal truncate line-clamp-1'>{quotedPost.creator.fullname}</span>
+                    <span className='text-md opacity-50 whitespace-normal truncate line-clamp-1'>@{quotedPost.creator.username}</span>
+                    <span>·</span>
+                    <span>{timeAgo(quotedPost.createdAt)}</span>
+                  </div>
+                  <span>{quotedPost?.content}</span>
+                  <MediaGallery media={quotedPost?.media ?? []} />
+                </Link>
+              </> : <div className='p-3 text-sm rounded-md border borderColor cursor-auto'>Quoted post unavailable</div>
+            : null}
           {/* estadisticas del post normal */}
           <div className="flex justify-between items-center gap-2">
             <div className="flex justify-center items-center gap-2">
               {/* like */}
               <LikeButton
+                username={user?.username!}
                 initialLikeState={initialLikeState}
                 initialLikesLength={initialLikesCount}
                 postId={_id}
@@ -359,6 +365,7 @@ const Post = ({
             <MediaGallery media={repostedFrom?.media ?? []} />
           </div>
           {/* si es un 'quote' post, añadir contenido del post citado */}
+          {/* no hace falta verificar si existe ya que si se elimina el post original quoteado, se eliminan automaticamente los reposts */}
           {repostedFrom?.quotedPost && repostedFrom?.quotedPost?._id && <>
             <Link href={`/post/${repostedFrom?.quotedPost.maskedId}`} className="p-2 border rounded-lg flex justify-start items-stretch gap-2 flex-col w-full flex-1 duration-150 hover:brightness-75 dark:bg-neutral-900 bg-white dark:border-neutral-700">
               {/* creator info and post date + options btn */}
@@ -380,6 +387,7 @@ const Post = ({
             <div className="flex justify-center items-center gap-2">
               {/* like */}
               <LikeButton
+                username={user?.username!}
                 initialLikeState={initialLikeState}
                 initialLikesLength={initialLikesCount}
                 postId={repostedFrom?._id!}
@@ -414,7 +422,7 @@ const Post = ({
                       <RepostButton
                         initialRepostState={initialRepostState}
                         initialRepostsLength={initialRepostsCount}
-                        postId={_id}
+                        postId={repostedFrom?._id!}
                         onRepostUpdate={handleRepostUpdate}
                         setMenuOpen={setMenuOpen}
                       />
@@ -483,25 +491,24 @@ const Post = ({
   const handlePostClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const target = e.target as HTMLElement;
 
-    // Si el click contiene algún elemento del post (incluyendo elementos de menú de opciones, del modal o del drawer) no redirigimos
     if (
       ['IMG', 'VIDEO', 'A', 'BUTTON', 'SPAN', 'P', 'SVG'].includes(target.tagName) ||
+      target.closest('.itemClass') ||
       target.classList.contains('itemClass') ||
       target.classList.contains('modalShadowBackground') ||
-      target.classList.contains('drawerOverlay')
+      target.classList.contains('drawerOverlay') ||
+      target.closest('.hoverCard')
     ) {
       e.preventDefault();
       return;
     }
 
-    // Si hay texto seleccionado, prevenimos la navegación
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
       e.preventDefault();
       return;
     }
 
-    // Si ninguna condición se cumple, navegamos hacia la ruta
     router.push(type === 'repost' ? `/post/${repostedFrom?.maskedId}` : `/post/${maskedId}`);
   };
 
