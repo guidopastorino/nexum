@@ -29,8 +29,8 @@ const PostsList = () => {
     fetcher: (page, pageSize) => fetchPosts(page, pageSize),
     pageSize: 35,
     refetchOnWindowFocus: true,
-    staleTime: 0,
-    cacheTime: 0
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
   });
 
   useEffect(() => console.log(posts), [posts])
