@@ -65,7 +65,7 @@ const RepostButton = ({
       setRepostsCount((prev) => prev - 1);
       setReposted(false);
       onRepostUpdate(Math.max(repostsCount - 1, 0), false);
-      await ky.delete(`/api/posts/${postId}`);
+      await ky.delete(`/api/posts/${postId}/undo-repost`);
       queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
       queryClient.invalidateQueries(['userProfile', session?.user?.id]);
       queryClient.invalidateQueries(['userPosts', session?.user?.id]);
