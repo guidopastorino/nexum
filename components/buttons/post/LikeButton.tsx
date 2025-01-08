@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { HiHeart, HiOutlineHeart } from "react-icons/hi2";
 import ky from 'ky';
 import { useSession } from 'next-auth/react';
+import { useQueryClient } from 'react-query';
 
 type LikeButtonProps = {
+  username: string;
   initialLikeState: boolean;
   initialLikesLength: number;
   postId: string;
@@ -11,62 +13,59 @@ type LikeButtonProps = {
 };
 
 const LikeButton = ({
+  username,
   initialLikeState,
   initialLikesLength,
   postId,
   onLikeUpdate,
 }: LikeButtonProps) => {
+  const queryClient = useQueryClient()
+
   const [liked, setLiked] = useState(initialLikeState);
   const [likesCount, setLikesCount] = useState(initialLikesLength);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    setLiked(initialLikeState);  // Solo sincroniza cuando cambia initialLikeState
-  }, [initialLikeState]);
+    setLiked(initialLikeState);
+    setLikesCount(initialLikesLength);
+  }, [initialLikeState, initialLikesLength]);
 
   const { data: session } = useSession();
 
-  const handleLike = async () => {
-    if (!session) {
+  const handleLikeToggle = async () => {
+    if (!session || isProcessing) {
       alert('You must be logged in to like posts');
       return;
     }
-
+    
+    const newLikeState = !liked;
+    const updatedCount = likesCount + (newLikeState ? 1 : -1);
+    
+    // Actualización optimista
+    setLiked(newLikeState);
+    setLikesCount(updatedCount);
+    onLikeUpdate(updatedCount, newLikeState);
+    
+    setIsProcessing(true);  // Evita clics múltiples
     try {
-      setLikesCount((prev) => prev + 1);
-      setLiked(true);
-      onLikeUpdate(likesCount + 1, true);
-      await ky.post(`/api/posts/${postId}/like`).json();
+      const endpoint = newLikeState ? `/api/posts/${postId}/like` : `/api/posts/${postId}/unlike`;
+      await ky.post(endpoint).json();
+      queryClient.invalidateQueries(["userLikes", username])
     } catch (error) {
-      console.error(error);
-      setLikesCount((prev) => prev - 1);
-      setLiked(false);
-      onLikeUpdate(Math.max(likesCount - 1, 0), false);
-    }
-  };
-
-  const handleUnlike = async () => {
-    if (!session) {
-      alert('You must be logged in to unlike posts');
-      return;
-    }
-
-    try {
-      setLikesCount((prev) => prev - 1);
-      setLiked(false);
-      onLikeUpdate(Math.max(likesCount - 1, 0), false);
-      await ky.post(`/api/posts/${postId}/unlike`).json();
-    } catch (error) {
-      console.error(error);
-      setLikesCount((prev) => prev + 1);
-      setLiked(true);
-      onLikeUpdate(likesCount + 1, true);
+      console.error('Error toggling like:', error);
+      setLiked(liked);
+      setLikesCount(likesCount);
+      onLikeUpdate(likesCount, liked);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
     <button
-      onClick={liked ? handleUnlike : handleLike}
-      className={"itemHover rounded-full px-2 py-1 flex justify-center items-center gap-2"}
+      onClick={handleLikeToggle}
+      className="itemHover rounded-full px-2 py-1 flex justify-center items-center gap-2"
+      disabled={isProcessing}
     >
       {liked ? <HiHeart color="red" className="scale-125" /> : <HiOutlineHeart />}
       <span className={`text-sm ${liked ? 'text-red-600 font-bold' : ''}`}>{likesCount}</span>
