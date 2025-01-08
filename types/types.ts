@@ -224,3 +224,26 @@ export type NavigationLinkProps = {
   title: string;
   route: string;
 };
+
+// respuesta al obtener datos de un usuario
+// generalmente se usa para la pagina de perfil de un usuario o el hover card de un usuario
+export interface UserProfile {
+  _id: string;
+  fullname: string;
+  username: string;
+  isVerified: boolean;
+  profileImage: string;
+  bannerImage: string;
+  description: string | null;
+  postsCount: number;
+  repliesCount: number;
+  mediaCount: number;
+  feedsCount: number;
+  communitiesCount: number;
+  followersCount: number;
+  followingCount: number;
+  isFollowingUser?: boolean;
+  isFollowedByUser?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
