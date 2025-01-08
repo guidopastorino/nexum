@@ -1,6 +1,5 @@
-import { UserProfile } from "@/app/[username]/layout";
 import { PostCreationProps } from "@/components/CreatePostFixedButton";
-import { FollowData, IUser, PostPageProps, PostProps } from "@/types/types";
+import { FollowData, IUser, PostPageProps, PostProps, UserProfile } from "@/types/types";
 import ky, { HTTPError } from "ky"
 
 // the main feed algorithm
@@ -185,18 +184,19 @@ interface DeletePostResponse {
   error?: string;
 }
 
+// Delete a normal post
 export const deletePost = async (postId: string): Promise<string> => {
   try {
-    const res = await ky.delete(`/api/posts/${postId}`);
+    const res = await ky.delete(`/api/posts/${postId}/delete-post`);
 
     if (res.ok) {
-      const data: DeletePostResponse = await res.json(); // Aserción de tipo
+      const data: DeletePostResponse = await res.json();
       console.log("Post deleted successfully:", data);
-      return data.message || "Post deleted successfully"; // Mensaje de éxito
+      return data.message || "Post deleted successfully";
     } else {
-      const errorData: DeletePostResponse = await res.json(); // Aserción de tipo
+      const errorData: DeletePostResponse = await res.json();
       console.error("Error deleting post:", errorData);
-      return errorData.error || "Error desconocido al eliminar el post"; // Error al eliminar el post
+      return errorData.error || "Error desconocido al eliminar el post";
     }
   } catch (error) {
     console.error("Network error:", error);
