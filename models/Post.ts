@@ -28,8 +28,10 @@ interface PostDocument extends Document {
   repostedFrom?: Types.ObjectId;
   quotedPost?: Types.ObjectId;
   media: MediaFile[];
-  parentPost: string | null;
-  type: 'normal' | 'repost' | 'quote';
+  // for reply posts
+  parentPost?: string | null;
+  replyingTo?: string | null;
+  type: 'normal' | 'repost' | 'quote' | 'reply';
 }
 
 const PostSchema = new Schema<PostDocument>(
@@ -46,7 +48,8 @@ const PostSchema = new Schema<PostDocument>(
     repostedFrom: { type: Schema.Types.ObjectId, ref: 'Post' },
     quotedPost: { type: Schema.Types.ObjectId, ref: 'Post' },
     media: { type: [MediaFileSchema], default: [] },
-    parentPost: { type: Schema.Types.ObjectId, ref: 'Post', default: null }, // si esta opcion existe, el post es una respuesta
+    parentPost: { type: Schema.Types.ObjectId, ref: 'Post' }, // si esta opcion existe, el post es una respuesta
+    replyingTo: { type: Schema.Types.ObjectId, ref: 'Post' }, // si esta opcion existe, el post es una respuesta
     type: { type: String, enum: ['normal', 'repost', 'quote'], default: 'normal' },
   },
   {
@@ -58,5 +61,6 @@ const PostSchema = new Schema<PostDocument>(
 PostSchema.index({ content: 'text' }, { weights: { content: 1 } });
 PostSchema.index({ communityId: 1, createdAt: -1 });
 PostSchema.index({ creator: 1, createdAt: -1 });
+PostSchema.index({ type: 1, createdAt: -1 });
 
 export default mongoose.models.Post || mongoose.model<PostDocument>('Post', PostSchema);
