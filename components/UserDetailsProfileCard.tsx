@@ -4,31 +4,18 @@ import ky from 'ky';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import Loader from './Loader';
+import Loader, { StrokeLoader } from './Loader';
 import { FaCircleCheck } from "react-icons/fa6";
-import * as HoverCard from "@radix-ui/react-hover-card";
+import { UserProfile } from '@/types/types';
+import HoverCard from './HoverCard';
+import UserProfileButtons from './buttons/UserProfileButtons';
+import Link from 'next/link';
+import HashWords from './HashWords';
 
-
-// // response
-interface IUser {
-  _id: string,
-  fullname: string,
-  username: string,
-  isVerified: boolean;
-  profileImage: string,
-  bannerImage: string,
-  createdAt: Date,
-  updatedAt: Date,
-  postsCount: number,
-  followersCount: number,
-  followingCount: number,
-  isFollowingUser: boolean,
-}
-
-const fetchCreatorData = async (creatorId: string, userId: string): Promise<IUser> => {
+const fetchCreatorData = async (creatorId: string): Promise<UserProfile> => {
   try {
-    const res = await ky.get(`/api/users/${creatorId}?&userId=${userId}`).json();
-    return res as IUser;
+    const res = await ky.get(`/api/users/${creatorId}`).json();
+    return res as UserProfile;
   } catch (error) {
     console.error(error);
     throw new Error('Error fetching creator data'); // Lanza un error para manejarlo en useQuery
@@ -41,75 +28,79 @@ interface HoverCardProps {
 }
 
 const UserDetailsProfileCard: React.FC<HoverCardProps> = ({ children, creatorId }) => {
-  const [open, setOpen] = useState<boolean>(false);
-
   const { data: session } = useSession()
 
-  const { data: creatorData, isLoading, error } = useQuery<IUser>(
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Fetch creator data only if hover card is open
+  const { data: creatorData, isLoading, error } = useQuery<UserProfile, Error>(
     ['creatorDataHoverCard', creatorId],
-    () => fetchCreatorData(creatorId, session?.user.id),
+    () => fetchCreatorData(creatorId),
     {
-      enabled: !!session?.user?.id && open,
-      staleTime: 1000 * 60 * 5, // Los datos se mantienen frescos durante 5 minutos
-      cacheTime: 1000 * 60 * 10, // Los datos se mantendrán en caché por 10 minutos antes de ser eliminados
+      // enabled: isHovered && !!session?.user.id
+      enabled: isHovered,
+      staleTime: 1000 * 60 * 5,
+      cacheTime: 1000 * 60 * 10,
       retry: 1,
       refetchOnWindowFocus: false,
     }
   );
 
-  return (
-    <HoverCard.Root open={open} onOpenChange={setOpen}>
-      <HoverCard.Trigger>
-        {children}
-      </HoverCard.Trigger>
-      <HoverCard.Content
-        className={`HoverCardContent bg-white dark:bg-neutral-800 shadow-lg rounded-lg overflow-hidden w-64 transition-opacity z-50`}
-        sideOffset={5}
-      >
-        <div>
-          {isLoading && <Loader width={20} height={20} />}
+  // if(!session) return children;
 
-          {creatorData && <>
-            <div className="relative w-full pb-[35%] left-0">
-              <img
-                src={creatorData?.bannerImage ? creatorData?.bannerImage : "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg"}
-                className="absolute top-0 w-full object-cover h-full rounded-b-lg"
-              />
-              <div className='z-30 absolute flex justify-start items-end left-1/2 -translate-x-1/2 top-[70%]'>
-                <div className="w-16 h-16 rounded-full overflow-hidden shadow-lg">
-                  <img
-                    src={creatorData?.profileImage ? creatorData?.profileImage : "/default_pfp.jpg"}
-                    className="w-full h-full cursor-pointer hover:brightness-90 duration-100"
-                  />
+  return (
+    <HoverCard
+      trigger={children}
+      positionX="center"
+      width={275}
+      onHoverChange={setIsHovered}
+    >
+      <div>
+        {isLoading && <div className="div p-3 flex justify-center items-center"><StrokeLoader size={20} /></div>}
+
+        {creatorData && <>
+          <div className="relative w-full cursor-auto">
+            <div className='flex flex-col justify-center items-stretch gap-2 p-4 mt-1'>
+              <div className="w-full flex justify-between items-start gap-2">
+                <img
+                  src={creatorData.profileImage ? creatorData.profileImage : "/default_pfp.jpg"}
+                  className="w-14 h-14 rounded-full overflow-hidden shadow-lg object-cover object-center cursor-pointer hover:brightness-90 duration-100"
+                />
+                <UserProfileButtons
+                  isFromItem={true}
+                  userId={creatorData._id}
+                  username={creatorData.username}
+                  isFollowingUser={creatorData.isFollowingUser || false}
+                  isFollowedByUser={creatorData.isFollowedByUser || false}
+                />
+              </div>
+              <div className="flex flex-col justify-start items-start">
+                <span className='font-bold text-lg'>{creatorData.fullname}</span>
+                <div className="flex justify-center items-center gap-2">
+                  <span className='opacity-80 text-sm'>@{creatorData.username}</span>
+                  {creatorData.isFollowedByUser && <span className="py-1.5 px-2 text-xs dark:bg-neutral-800 bg-gray-100 rounded-full">Follows you</span>}
                 </div>
               </div>
+              <div className="flex flex-wrap gap-2 justify-start items-center">
+                <div className="flex justify-center items-center gap-1">
+                  <span className='font-medium'>{creatorData.postsCount}</span>
+                  <span className='opacity-80'>Posts</span>
+                </div>
+                <div className="flex justify-center items-center gap-1">
+                  <span className='font-medium'>{creatorData.followersCount}</span>
+                  <Link href={`/${creatorData.username}/followers`} className='opacity-80 hover:underline'>Followers</Link>
+                </div>
+                <div className="flex justify-center items-center gap-1">
+                  <span className='font-medium'>{creatorData.followingCount}</span>
+                  <Link href={`/${creatorData.username}/following`} className='opacity-80 hover:underline'>Following</Link>
+                </div>
+              </div>
+              {creatorData.description && <HashWords text={creatorData.description} />}
             </div>
-            {/*  */}
-            <div className='px-2 pt-12 pb-3 flex flex-col justify-center items-center'>
-              <div className="flex justify-center items-center gap-2">
-                <span>{creatorData.fullname}</span>
-                <FaCircleCheck className='text-orange-600' />
-              </div>
-              <span className='opacity-50 text-sm my-2 block'>@{creatorData.username}</span>
-              <div className="flex flex-wrap justify-start items-center gap-2">
-                <div className='flex justify-center items-center gap-1 text-sm'>
-                  <span className='font-bold'>{creatorData.postsCount}</span>
-                  <span className='opacity-70'>Posts</span>
-                </div>
-                <div className='flex justify-center items-center gap-1'>
-                  <span className='font-bold'>{creatorData.followersCount}</span>
-                  <span className='opacity-70'>Followers</span>
-                </div>
-                <div className='flex justify-center items-center gap-1'>
-                  <span className='font-bold'>{creatorData.followingCount}</span>
-                  <span className='opacity-70'>Following</span>
-                </div>
-              </div>
-            </div>
-          </>}
-        </div>
-      </HoverCard.Content>
-    </HoverCard.Root>
+          </div>
+        </>}
+      </div>
+    </HoverCard>
   );
 };
 
