@@ -58,7 +58,7 @@ const SearchPage = () => {
         {results.posts && results.posts.length > 0 && (
           <div>
             {results.posts.map((post: PostProps, i: number) => (
-              <Post key={i} {...post} />
+              <Post key={post.maskedId} {...post} />
             ))}
           </div>
         )}
