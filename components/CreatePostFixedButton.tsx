@@ -156,7 +156,7 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
           width={500}
           buttonTrigger={trigger}
           onClose={handleOnCloseModal}
-          closeOnDarkClick={false} // Aquí no se cierra al hacer click fuera
+          closeOnDarkClick={false}
         >
           <div className="bg-white dark:bg-neutral-800 pt-2">
             {/* carousel */}
@@ -263,8 +263,8 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
                   Cancel
                 </button>
                 <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
-                {isLoading ? "Posting..." : "Post"}
-              </button>
+                  {isLoading ? "Posting..." : "Post"}
+                </button>
               </div>
             </div>
           </div>
