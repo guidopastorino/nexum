@@ -28,9 +28,8 @@ const PostsList = ({ creator }: { creator: string }) => {
     queryKey: ["userPosts", creator],
     fetcher: (page, pageSize) => getUserPosts(creator, page, pageSize),
     pageSize: 10,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-    cacheTime: 0,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
   });
 
   if (isLoading) {
