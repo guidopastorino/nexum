@@ -27,23 +27,32 @@ export default function HoverCard({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleMouseEnter = () => {
+    // Cancel any existing timeout to avoid multiple actions in rapid succession
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setTimeout(() => {
-      setIsRendered(true)
+
+    // Set the timeout to show the card
+    timeoutRef.current = setTimeout(() => {
+      setIsRendered(true)  // Begin rendering the card after the delay
       setTimeout(() => {
         setIsHovered(true)
         if (onHoverChange) {
           onHoverChange(true)
         }
       }, 50)
-    }, 450)
+    }, 800)
   }
 
   const handleMouseLeave = () => {
+    // Immediately hide the hover card if the mouse leaves 
     setIsHovered(false)
     if (onHoverChange) {
       onHoverChange(false)
     }
+
+    // Clear the timeout to avoid triggering the hover card after mouse leave
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+
+    // Hide the rendered card shortly after the mouse leaves
     timeoutRef.current = setTimeout(() => setIsRendered(false), 300)
   }
 
