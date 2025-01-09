@@ -24,6 +24,9 @@ import {
 import { uploadFiles } from '@/actions/uploadFiles';
 import { useSession } from 'next-auth/react';
 import useScroll from '@/hooks/useScroll';
+import ReactCrop, { type Crop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
+import { FaScissors } from 'react-icons/fa6';
 
 // The necessary props to create a post (normal)
 export interface PostCreationProps {
@@ -37,6 +40,11 @@ interface CreatePostFixedButtonProps {
 }
 
 const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }) => {
+  // 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOnCloseModal = () => setIsModalOpen(false)
+
   const user = useUser()
   const { data: session } = useSession()
 
@@ -110,9 +118,9 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
 
   const handleMediaFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
-  
+
     const files = Array.from(event.target.files);
-  
+
     setPost((prev) => ({
       ...prev,
       media: [...prev.media, ...files],
@@ -131,12 +139,25 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
     showButtonRight
   } = useScroll(ScrollContainerRef);
 
+  const [crop, setCrop] = useState<Crop>({
+    unit: '%',
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25
+  })
+
   if (!mounted) return null;
 
   return (
     <LoggedIn>
       {
-        <Modal width={500} buttonTrigger={trigger}>
+        <Modal
+          width={500}
+          buttonTrigger={trigger}
+          onClose={handleOnCloseModal}
+          closeOnDarkClick={false} // Aquí no se cierra al hacer click fuera
+        >
           <div className="bg-white dark:bg-neutral-800 pt-2">
             {/* carousel */}
             {post.media.length > 0 && <div className="relative w-full p-2">
@@ -161,7 +182,20 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
                     const url = URL.createObjectURL(el)
                     if (el.type.startsWith('image')) {
                       return (
-                        <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
+                        <div className="relative">
+                          <Modal
+                            buttonTrigger={<button className='absolute top-1 left-1 z-50 rounded-full p-2 bg-black text-white'>
+                              <FaScissors size={20} />
+                            </button>}
+                            onClose={handleOnCloseModal}
+                            closeOnDarkClick={true} // Este modal sí se cierra al hacer click fuera
+                          >
+                            <ReactCrop crop={crop} onChange={c => setCrop(c)}>
+                              <img src={url} alt={el.name} />
+                            </ReactCrop>
+                          </Modal>
+                          <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
+                        </div>
                       )
                     } else {
                       return (
@@ -224,9 +258,14 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
                 </button>
               </div>
 
-              <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
+              <div className="flex justify-center items-center gap-2">
+                <button onClick={handleOnCloseModal} className={`px-4 py-2 border borderColor bg-transparent rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100 itemHover`}>
+                  Cancel
+                </button>
+                <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
                 {isLoading ? "Posting..." : "Post"}
               </button>
+              </div>
             </div>
           </div>
         </Modal>
