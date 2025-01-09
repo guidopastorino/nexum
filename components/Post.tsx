@@ -139,13 +139,19 @@ const Post = ({
                     <LoggedIn>
                       <>
                         {user.username === creator.username ? (
-                          <OwnerPostMenu creatorUsername={creator.username} userId={creator._id} postId={_id} setMenuOpen={setMenuOpen} states={{
-                            isPinned: initialPinnedState,
-                            setInitialPinnedState,
-                            isHighlighted,
-                            isOnList,
-                            isConversationMuted,
-                          }} />
+                          <OwnerPostMenu
+                            type={quotedPost ? 'quote' : 'normal'}
+                            creatorUsername={creator.username}
+                            userId={creator._id}
+                            postId={_id}
+                            setMenuOpen={setMenuOpen}
+                            states={{
+                              isPinned: initialPinnedState,
+                              setInitialPinnedState,
+                              isHighlighted,
+                              isOnList,
+                              isConversationMuted,
+                            }} />
                         ) : (
                           <OtherUserPostMenu userId={creator._id} creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} states={{
                             isFollowing: initialFollowState,
@@ -336,13 +342,19 @@ const Post = ({
                     <LoggedIn>
                       <>
                         {user.username === repostedFrom?.creator.username! ? (
-                          <OwnerPostMenu creatorUsername={repostedFrom?.creator.username!} userId={repostedFrom?.creator._id!} postId={repostedFrom?._id!} setMenuOpen={setMenuOpen} states={{
-                            isPinned: initialPinnedState,
-                            setInitialPinnedState,
-                            isHighlighted,
-                            isOnList,
-                            isConversationMuted,
-                          }} />
+                          <OwnerPostMenu
+                            type={repostedFrom?.quotedPost ? 'quote' : 'normal'}
+                            creatorUsername={repostedFrom?.creator.username!}
+                            userId={repostedFrom?.creator._id!}
+                            postId={repostedFrom?._id!}
+                            setMenuOpen={setMenuOpen}
+                            states={{
+                              isPinned: initialPinnedState,
+                              setInitialPinnedState,
+                              isHighlighted,
+                              isOnList,
+                              isConversationMuted,
+                            }} />
                         ) : (
                           <OtherUserPostMenu userId={repostedFrom?.creator._id!} creatorUsername={repostedFrom?.creator.username!} postId={repostedFrom?.maskedId!} setMenuOpen={setMenuOpen} states={{
                             isFollowing: initialFollowState,
