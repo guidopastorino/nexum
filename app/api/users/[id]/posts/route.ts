@@ -11,8 +11,8 @@ import { authOptions } from "@/utils/api/auth-options/authOptions";
 import { postPopulateOptions, postSelectionFields } from '@/utils/api/postPopulateOptions';
 import { mapPostData } from '@/utils/api/mapPostData';
 
-// params.id es el id del creador de los posts
-// session.user.id es el id del usuario actualmente logeado
+// params.id es el id o username del creador de los posts
+// session.user.id es el id del usuario actualmente logueado
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     await dbConnect();
@@ -36,7 +36,21 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: "Post creator not found" }, { status: 404 });
     }
 
-    const postQuery = Post.find({ _id: { $in: user.posts } })
+    const pinnedPostId = user.pinnedPosts.length ? user.pinnedPosts[0] : null;
+    let pinnedPost = null;
+
+    // Busca el pinned post directamente antes de la paginación
+    if (pinnedPostId) {
+      pinnedPost = await Post.findById(pinnedPostId)
+        .populate(postPopulateOptions)
+        .select(postSelectionFields)
+        .exec();
+    }
+
+    // Excluye el pinned post de la consulta paginada
+    const postQuery = Post.find({
+      _id: { $in: user.posts, $ne: pinnedPostId },
+    })
       .skip(skip)
       .limit(pageSize)
       .populate(postPopulateOptions)
@@ -48,21 +62,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     const posts = await postQuery.exec();
-
-    const pinnedPostId = user.pinnedPosts.length ? user.pinnedPosts[0].toString() : null;
-    if (pinnedPostId) {
-      const pinnedPostIndex = posts.findIndex(post => post._id.toString() === pinnedPostId);
-      if (pinnedPostIndex !== -1) {
-        const [pinnedPost] = posts.splice(pinnedPostIndex, 1);
-        posts.unshift(pinnedPost);
-      }
-    }
-
-    const enrichedPosts = await mapPostData(posts, userId);
+    const finalPosts = pinnedPost && page === 1 ? [pinnedPost, ...posts] : posts;
+    const enrichedPosts = await mapPostData(finalPosts, userId);
 
     return NextResponse.json(enrichedPosts, { status: 200 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
