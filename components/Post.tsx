@@ -23,7 +23,7 @@ import QuoteButton from './buttons/post/QuoteButton';
 import RepostButton from './buttons/post/RepostButton';
 import { useParams, usePathname } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
-import MediaGallery from './PostMediaGallery';
+import MediaGallery from './MediaGallery';
 
 // Recibe los datos del post como props
 const Post = ({
