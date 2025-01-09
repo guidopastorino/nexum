@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryClient } from 'react-query';
-import { deletePost } from "@/utils/fetchFunctions";
+import { deleteNormalPost, deleteQuotePost } from "@/utils/fetchFunctions";
 import { HiOutlineTrash, HiOutlineEye, HiOutlineExclamationCircle, HiPencil, HiOutlineUsers } from 'react-icons/hi2';
 import { BsBarChart, BsPerson, BsPinAngle, BsPinAngleFill, BsLink45Deg } from 'react-icons/bs';
 import { MdOutlineList, MdOutlineAnalytics, MdOutlineBlock } from 'react-icons/md';
@@ -58,16 +58,24 @@ export const GuestPostMenu = ({
 };
 
 // ------------ Menú para usuarios autenticados (cuando el usuario es el creador del post) ------------
-const DeleteItemOption = ({ postId, userId, setMenuOpen }: { postId: string; userId: string, setMenuOpen: (open: boolean) => void }) => {
+const DeleteItemOption = ({ type, postId, userId, setMenuOpen }: { type: 'normal' | 'quote', postId: string; userId: string, setMenuOpen: (open: boolean) => void }) => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
   const handleDeletePost = async () => {
-    setMenuOpen(false)
-    showToast("Deleting post...");
-    const res = await deletePost(postId);
-    console.log(res);
-    showToast("Post deleted successfully");
+    setMenuOpen(false);
+    showToast(type == 'normal' ? "Deleting post..." : "Unquoting post...");
+
+    let resMessage = "";
+
+    if (type === 'normal') {
+      resMessage = await deleteNormalPost(postId);
+    } else if (type === 'quote') {
+      resMessage = await deleteQuotePost(postId);
+    }
+
+    showToast(resMessage);
+
     queryClient.invalidateQueries(['posts']);
     queryClient.invalidateQueries(['creatorDataHoverCard', userId]);
     queryClient.invalidateQueries(['userProfile', userId]);
@@ -77,10 +85,15 @@ const DeleteItemOption = ({ postId, userId, setMenuOpen }: { postId: string; use
   return (
     <li className="itemClass itemHover" onClick={handleDeletePost}>
       <HiOutlineTrash size={20} color='#ef4444' />
-      <span className='text-red-500'>Delete post</span>
+      <span className='text-red-500'>
+        {type === 'normal' ? "Delete post" : "Remove quote"}
+      </span>
     </li>
   );
 };
+
+export default DeleteItemOption;
+
 
 const ChangeWhoCanReplyOption = ({ postId, setDropdownContent }: { postId: string, setDropdownContent: React.Dispatch<React.SetStateAction<"" | "whoCanReply">> }) => {
   return (
@@ -125,12 +138,14 @@ const PinPostOption = ({
 };
 
 export const OwnerPostMenu = ({
+  type,
   creatorUsername,
   postId,
   userId,
   states,
   setMenuOpen,
 }: {
+  type:  'normal' | 'quote', // post type ('normal' or 'quote', to handle deletion)
   creatorUsername: string;
   postId: string;
   userId: string;
@@ -148,7 +163,12 @@ export const OwnerPostMenu = ({
   if (!dropdownContent) {
     return (
       <>
-        <DeleteItemOption postId={postId} userId={userId} setMenuOpen={setMenuOpen} />
+        <DeleteItemOption
+          type={type}
+          postId={postId}
+          userId={userId}
+          setMenuOpen={setMenuOpen}
+        />
         <div className="itemClass" onClick={() => setMenuOpen(false)}>
           <HiPencil size={20} />
           <span>Edit post</span>
