@@ -9,7 +9,7 @@ interface ModalProps {
   width?: number; // pizels
   isOpen?: boolean;
   onClose?: () => void; // Prop opcional
-  closeOnDarkClick: boolean;
+  closeOnDarkClick?: boolean;
 }
 
 const Modal = ({ buttonTrigger, children, width, isOpen, onClose, closeOnDarkClick = true }: ModalProps) => {
