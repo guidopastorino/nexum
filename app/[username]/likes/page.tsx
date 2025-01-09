@@ -72,7 +72,7 @@ const LikedPostsList = ({ params }: { params: { username: string } }) => {
   return (
     <div>
       {posts.map((post: PostProps) => (
-        <Post key={post._id} {...post} />
+        <Post key={post.maskedId} {...post} />
       ))}
       {isFetchingNextPage && (
         <div className="w-full flex justify-center items-center p-5">
