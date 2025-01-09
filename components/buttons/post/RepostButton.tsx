@@ -40,6 +40,7 @@ const RepostButton = ({
       setRepostsCount((prev) => prev + 1);
       setReposted(true);
       onRepostUpdate(repostsCount + 1, true);
+      showToast("Reposting...");
       await ky.post(`/api/posts/`, { json: { repostedFrom: postId, type: 'repost' } });
       queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
       queryClient.invalidateQueries(['userProfile', session?.user?.id]);
@@ -65,6 +66,7 @@ const RepostButton = ({
       setRepostsCount((prev) => prev - 1);
       setReposted(false);
       onRepostUpdate(Math.max(repostsCount - 1, 0), false);
+      showToast("Removing repost...");
       await ky.delete(`/api/posts/${postId}/undo-repost`);
       queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
       queryClient.invalidateQueries(['userProfile', session?.user?.id]);
