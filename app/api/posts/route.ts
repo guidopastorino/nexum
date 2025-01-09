@@ -50,10 +50,9 @@ export async function POST(req: Request, res: Response) {
   const userId = session.user.id;
 
   try {
-    // Conectar a la base de datos
     await dbConnect();
 
-    // Obtener los datos del request
+    // datos del request
     const { communityId, feedId, content, repostedFrom, quotedPost, media, type } = await req.json();
 
     // Validar los datos necesarios para crear un post
