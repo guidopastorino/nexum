@@ -6,14 +6,14 @@ import ReactDOM from 'react-dom';
 interface ModalProps {
   buttonTrigger: React.ReactElement<any, any>;
   children: React.ReactNode;
-  width?: number; /* pixels */
-  isOpen?: boolean; // Prop opcional
+  width?: number; // pizels
+  isOpen?: boolean;
   onClose?: () => void; // Prop opcional
   closeOnDarkClick: boolean;
 }
 
 const Modal = ({ buttonTrigger, children, width, isOpen, onClose, closeOnDarkClick = true }: ModalProps) => {
-  const [modal, setModal] = useState<boolean>(isOpen ?? false); // Si no se pasa `isOpen`, usa `false`
+  const [modal, setModal] = useState<boolean>(isOpen ?? false);
   const [animation, setAnimation] = useState<boolean>(false);
   const ModalRef = useRef<HTMLDivElement | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
@@ -55,11 +55,7 @@ const Modal = ({ buttonTrigger, children, width, isOpen, onClose, closeOnDarkCli
           // Solo cierra el modal si `closeOnDarkClick` es verdadero
           if (closeOnDarkClick) {
             setAnimation(false);
-            if (onClose) {
-              onClose();
-            } else {
-              setModal(false);
-            }
+            onClose?.();  // Llama a `onClose` si está disponible
           }
         }
       }
