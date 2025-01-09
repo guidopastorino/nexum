@@ -185,13 +185,12 @@ interface DeletePostResponse {
 }
 
 // Delete a normal post
-export const deletePost = async (postId: string): Promise<string> => {
+export const deleteNormalPost = async (postId: string): Promise<string> => {
   try {
     const res = await ky.delete(`/api/posts/${postId}/delete-post`);
 
     if (res.ok) {
       const data: DeletePostResponse = await res.json();
-      console.log("Post deleted successfully:", data);
       return data.message || "Post deleted successfully";
     } else {
       const errorData: DeletePostResponse = await res.json();
@@ -199,9 +198,26 @@ export const deletePost = async (postId: string): Promise<string> => {
       return errorData.error || "Error desconocido al eliminar el post";
     }
   } catch (error) {
-    console.error("Network error:", error);
-    return "Error al eliminar el post: " + (error instanceof Error ? error.message : "Desconocido");
+    console.error("error:", error);
+    return "Error al eliminar el post: " + (error instanceof Error ? error.message : "Unknown");
   }
 };
 
-// pin post
+// Delete a quote post
+export const deleteQuotePost = async (postId: string): Promise<string> => {
+  try {
+    const res = await ky.delete(`/api/posts/${postId}/unquote`);
+
+    if (res.ok) {
+      const data: DeletePostResponse = await res.json();
+      return data.message || "Post unquoted successfully";
+    } else {
+      const errorData: DeletePostResponse = await res.json();
+      console.error("Error unquoting post:", errorData);
+      return errorData.error || "Unknown error trying to unquote the post";
+    }
+  } catch (error) {
+    console.error("error:", error);
+    return "Error al eliminar el post: " + (error instanceof Error ? error.message : "Unknown");
+  }
+};
