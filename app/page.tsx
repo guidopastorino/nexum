@@ -27,8 +27,8 @@ const PostsList = () => {
   } = useInfiniteScroll<PostProps>({
     queryKey: ["posts", userId || "guest"],
     fetcher: (page, pageSize) => fetchPosts(page, pageSize),
-    pageSize: 35,
     refetchOnWindowFocus: true,
+    pageSize: 20,
     staleTime: 5 * 60 * 1000,
     cacheTime: 30 * 60 * 1000,
   });
@@ -59,7 +59,7 @@ const PostsList = () => {
         <FeedSelector />
 
         {posts.map((post, i) => (
-          <Post key={i} {...post} />
+          <Post key={post.maskedId} {...post} />
         ))}
         {isFetchingNextPage && (
           <div className="flex justify-center items-center p-3">
