@@ -10,7 +10,7 @@ import Link from "next/link";
 import UserDetailsProfileCard from "@/components/UserDetailsProfileCard";
 import UserProfileButtons from "@/components/buttons/UserProfileButtons";
 import HashWords from "@/components/HashWords";
-import MediaGallery from "@/components/PostMediaGallery";
+import MediaGallery from "@/components/MediaGallery";
 import { StrokeLoader } from "@/components/Loader";
 
 const Page = ({ params }: { params: { id: string } }) => {
