@@ -7,32 +7,22 @@ interface ModalProps {
   buttonTrigger: React.ReactElement<any, any>;
   children: React.ReactNode;
   width?: number; /* pixels */
+  isOpen?: boolean; // Prop opcional
+  onClose?: () => void; // Prop opcional
+  closeOnDarkClick: boolean;
 }
 
-const Modal = ({ buttonTrigger, children, width }: ModalProps) => {
-  const [modal, setModal] = useState<boolean>(false);
+const Modal = ({ buttonTrigger, children, width, isOpen, onClose, closeOnDarkClick = true }: ModalProps) => {
+  const [modal, setModal] = useState<boolean>(isOpen ?? false); // Si no se pasa `isOpen`, usa `false`
   const [animation, setAnimation] = useState<boolean>(false);
   const ModalRef = useRef<HTMLDivElement | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
   const [isScreenHeightLarge, setIsScreenHeightLarge] = useState<boolean>(false);
 
-  // Determina si estamos en el cliente
   useEffect(() => {
     setIsClient(true);
     setIsScreenHeightLarge(window.innerHeight > 400);
   }, []);
-
-  // Monitorea los cambios en la altura de la pantalla
-  useEffect(() => {
-    if (isClient) {
-      const handleResize = () => {
-        setIsScreenHeightLarge(window.innerHeight > 500);
-      };
-
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, [isClient]);
 
   useEffect(() => {
     if (modal) {
@@ -46,21 +36,31 @@ const Modal = ({ buttonTrigger, children, width }: ModalProps) => {
     if (!animation) {
       setTimeout(() => {
         setModal(false);
-      }, 300);
+        onClose?.(); // Llama a `onClose` si está disponible
+      }, 200);
     }
-  }, [animation]);
+  }, [animation, onClose]);
 
   useEffect(() => {
     const handler1 = (e: KeyboardEvent) => {
       if (modal && e.code === 'Escape') {
         setAnimation(false);
+        onClose?.(); // Cierra el modal y llama a `onClose` si está disponible
       }
     };
 
     const handler2 = (e: MouseEvent) => {
       if (modal && ModalRef.current) {
         if (!ModalRef.current.contains(e.target as Node)) {
-          setAnimation(false);
+          // Solo cierra el modal si `closeOnDarkClick` es verdadero
+          if (closeOnDarkClick) {
+            setAnimation(false);
+            if (onClose) {
+              onClose();
+            } else {
+              setModal(false);
+            }
+          }
         }
       }
     };
@@ -72,15 +72,7 @@ const Modal = ({ buttonTrigger, children, width }: ModalProps) => {
       document.removeEventListener('keyup', handler1);
       document.removeEventListener('mousedown', handler2);
     };
-  });
-
-  useEffect(() => {
-    const element = document.querySelector('body');
-
-    if (element) {
-      element.classList.toggle('overflow-hidden', modal);
-    }
-  }, [modal]);
+  }, [modal, closeOnDarkClick]);
 
   const modalWidth: number = width ? width : 384;
 
@@ -102,9 +94,9 @@ const Modal = ({ buttonTrigger, children, width }: ModalProps) => {
             ref={ModalRef}
             style={{ maxWidth: `${modalWidth}px` }}
             className={`
-    ${animation ? 'scale-100' : 'scale-95'}
-    h-auto max-h-[600px] overflow-y-auto w-[90%] shadow-lg rounded-md overflow-hidden duration-200 select-none
-  `}
+              ${animation ? 'scale-100' : 'scale-[.96]'}
+              h-auto max-h-[600px] overflow-y-auto w-[90%] shadow-lg rounded-md overflow-hidden duration-100 select-none
+            `}
           >
             {children}
           </div>
