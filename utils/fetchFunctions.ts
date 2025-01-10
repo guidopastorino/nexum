@@ -1,5 +1,5 @@
 import { PostCreationProps } from "@/components/CreatePostFixedButton";
-import { FollowData, IUser, PostPageProps, PostProps, UserProfile } from "@/types/types";
+import { FollowData, IUser, PostPageProps, PostProps, UpdateUserData, UserProfile } from "@/types/types";
 import ky, { HTTPError } from "ky"
 
 // the main feed algorithm
@@ -62,6 +62,21 @@ export const createUser = async ({
   } catch (error) {
     // En caso de error, lanzar el error con un mensaje genérico
     return "Error al registrar el usuario: " + (error instanceof Error ? error.message : "Desconocido");
+  }
+};
+
+// Updates a user's basic profile info
+// PUT /api/users, { fullname, username, profileImage, bannerImage }
+export const updateUser = async (id: string, data: UpdateUserData): Promise<any> => {
+  try {
+    const updatedUser = await ky.put(`/api/users/${id}`, {
+      json: data,
+    }).json();
+
+    return updatedUser;
+  } catch (error) {
+    console.error("Failed to update user:", error);
+    throw error;
   }
 };
 
