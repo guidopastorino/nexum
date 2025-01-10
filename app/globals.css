@@ -66,7 +66,7 @@ button>* {
 
 /* form input */
 .formInput {
-  @apply w-full block p-2 border dark:border-neutral-700 outline-none hover:border-black dark:hover:border-neutral-600 focus:border-black dark:focus:border-neutral-500 focus-visible:border-black dark:focus-visible:border-neutral-700 text-base;
+  @apply w-full block p-2 border dark:border-neutral-700 outline-none hover:border-black dark:hover:border-neutral-600 focus:border-black dark:focus:border-neutral-500 focus-visible:border-black dark:focus-visible:border-neutral-700 text-base
 }
 
 /*  */
