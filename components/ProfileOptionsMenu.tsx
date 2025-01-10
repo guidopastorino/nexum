@@ -3,10 +3,14 @@
 import { HiOutlineExclamationCircle, HiOutlineEye, HiOutlineShare } from 'react-icons/hi2';
 import { BsLink45Deg, BsPerson } from 'react-icons/bs';
 import Link from 'next/link';
-import { MdOutlineBlock, MdOutlineList } from 'react-icons/md';
+import { MdLink, MdOutlineBlock, MdOutlineList } from 'react-icons/md';
 import { FollowUserOption } from './PostItemsComponent';
 import { useState } from 'react';
 import { FaUserSlash } from 'react-icons/fa';
+import { LuRefreshCwOff } from "react-icons/lu";
+import { RiFileList3Line } from 'react-icons/ri';
+import { HiUpload } from 'react-icons/hi';
+import { IoMdVolumeOff } from 'react-icons/io';
 
 
 // for users not logged (for now it is unusable)
@@ -92,19 +96,28 @@ export const OthersProfileMenu = ({
 
   return (
     <>
-      <FollowUserOption
-        userId={userId}
-        creatorUsername={creatorUsername}
-        isFollowing={states?.isFollowing || false}
-        setInitialFollowState={states?.setInitialFollowState!}
-        setMenuOpen={setMenuOpen}
-      />
+      <div className="itemClass" onClick={() => setMenuOpen(false)}>
+        <LuRefreshCwOff size={20} />
+        <span>Turn off reposts</span>
+      </div>
+      <div className="itemClass" onClick={() => setMenuOpen(false)}>
+        <RiFileList3Line size={20} />
+        <span>View lists</span>
+      </div>
+      <div className="itemClass" onClick={() => setMenuOpen(false)}>
+        <HiUpload size={20} />
+        <span>Share profile via …</span>
+      </div>
       <div className="itemClass" onClick={() => setMenuOpen(false)}>
         <MdOutlineList size={20} />
         <span>{states?.isOnList ? "Remove from Lists" : `Add to Lists`}</span>
       </div>
       <div className="itemClass" onClick={() => setMenuOpen(false)}>
-        <FaUserSlash size={20} />
+        <MdLink size={20} />
+        <span>Copy link to profile</span>
+      </div>
+      <div className="itemClass" onClick={() => setMenuOpen(false)}>
+        <IoMdVolumeOff size={20} />
         <span>{states?.isUserMuted ? `Unmute @${creatorUsername}` : `Mute @${creatorUsername}`}</span>
       </div>
       <div className="itemClass" onClick={() => setMenuOpen(false)}>
