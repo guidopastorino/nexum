@@ -3,6 +3,7 @@ export interface UserState {
   _id: string | null;
   fullname: string | null;
   username: string | null;
+  description: string | null;
   isVerified: boolean | null;
   email: string | null;
   profileImage: string | null;
@@ -247,3 +248,12 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
 }
+
+// Data to be send to update the user's basic data
+export type UpdateUserData = {
+  fullname?: string | null;
+  username?: string | null;
+  description?: string | null;
+  profileImage?: string | null;
+  bannerImage?: string | null;
+};
