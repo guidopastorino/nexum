@@ -61,7 +61,7 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
     {
       enabled: !!params.username,
       staleTime: 0,
-      cacheTime: 1000 * 60 * 10,
+      cacheTime: 0,
       refetchOnWindowFocus: true,
     }
   );
@@ -107,6 +107,8 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
               {user.isFollowedByUser && <span className="py-1.5 px-2 text-xs dark:bg-neutral-800 bg-gray-100 rounded-full">Follows you</span>}
             </div>
           </div>
+          {/* description */}
+          {user.description && <HashWords text={user.description} />}
           {/* posts, followers, following */}
           <div className="flex flex-wrap gap-2 justify-start items-center">
             <div className="flex justify-center items-center gap-1">
@@ -122,8 +124,6 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
               <Link href={`/${params.username}/following`} className='opacity-80 hover:underline'>Following</Link>
             </div>
           </div>
-          {/* description */}
-          {user.description && <HashWords text={user.description} />}
         </div>
         {/* profile image */}
         <div className='top-28 left-3 absolute z-20'>
