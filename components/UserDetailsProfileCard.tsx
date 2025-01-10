@@ -67,6 +67,7 @@ const UserDetailsProfileCard: React.FC<HoverCardProps> = ({ children, creatorId 
                   className="w-14 h-14 rounded-full overflow-hidden shadow-lg object-cover object-center cursor-pointer hover:brightness-90 duration-100"
                 />
                 <UserProfileButtons
+                  disableIfSameUser={true}
                   isFromItem={true}
                   userId={creatorData._id}
                   username={creatorData.username}
@@ -81,11 +82,8 @@ const UserDetailsProfileCard: React.FC<HoverCardProps> = ({ children, creatorId 
                   {creatorData.isFollowedByUser && <span className="py-1.5 px-2 text-xs dark:bg-neutral-800 bg-gray-100 rounded-full">Follows you</span>}
                 </div>
               </div>
+              {creatorData.description && <HashWords text={creatorData.description} />}
               <div className="flex flex-wrap gap-2 justify-start items-center">
-                <div className="flex justify-center items-center gap-1">
-                  <span className='font-medium'>{creatorData.postsCount}</span>
-                  <span className='opacity-80'>Posts</span>
-                </div>
                 <div className="flex justify-center items-center gap-1">
                   <span className='font-medium'>{creatorData.followersCount}</span>
                   <Link href={`/${creatorData.username}/followers`} className='opacity-80 hover:underline'>Followers</Link>
@@ -95,7 +93,6 @@ const UserDetailsProfileCard: React.FC<HoverCardProps> = ({ children, creatorId 
                   <Link href={`/${creatorData.username}/following`} className='opacity-80 hover:underline'>Following</Link>
                 </div>
               </div>
-              {creatorData.description && <HashWords text={creatorData.description} />}
             </div>
           </div>
         </>}
