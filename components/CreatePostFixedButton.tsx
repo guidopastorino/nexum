@@ -73,6 +73,25 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
     setCanPost(!!post.content.length || !!post.media.length);
   }, [post.content, post.media]);
 
+  const handleMediaFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) return;
+
+    const files = Array.from(event.target.files);
+
+    const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+
+    const oversizedFile = files.find(file => file.size > MAX_FILE_SIZE);
+
+    if (oversizedFile) {
+      alert('El archivo es demasiado grande. El tamaño máximo es 4MB.');
+      return;
+    }
+
+    setPost((prev) => ({
+      ...prev,
+      media: [...prev.media, ...files],
+    }));
+  };
 
   const handleCreatePost = async () => {
     setIsLoading(true);
@@ -114,18 +133,6 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleMediaFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) return;
-
-    const files = Array.from(event.target.files);
-
-    setPost((prev) => ({
-      ...prev,
-      media: [...prev.media, ...files],
-      // media: files
-    }));
   };
 
   const ScrollContainerRef = useRef<HTMLDivElement | null>(null);
