@@ -42,7 +42,6 @@ const UseApp = ({ children }: { children: React.ReactNode }) => {
                 showAtBottom={false}
               />
               <Toast />
-              {/* Para transición al cambiar entre páginas */}
               {children}
             </QueryClientProvider>
           </AuthStateListenerWrapper>
