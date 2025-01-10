@@ -1,4 +1,4 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { isValidObjectId, Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import Post from "@/models/Post";
@@ -62,5 +62,59 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   } catch (error) {
     console.error("Error fetching user:", error);
     return NextResponse.json({ message: "Error fetching user", error }, { status: 500 });
+  }
+}
+
+// PUT /api/users
+// Update user's profile
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { id } = params
+    const { fullname, username, description, profileImage, bannerImage } = await req.json()
+
+    await dbConnect()
+
+    const filter = isValidObjectId(id) ? { _id: id } : { username: id }
+
+    const user = await User.findOne(filter)
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Verificar si el usuario es el mismo que está haciendo la solicitud (asegurando la seguridad)
+    if (user._id.toString() !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Actualizar los campos del usuario
+    const updatedUser = await User.updateOne(
+      filter,
+      {
+        $set: {
+          fullname,
+          username,
+          description,
+          profileImage,
+          bannerImage
+        }
+      }
+    )
+
+    // Si la actualización no afectó a ningún documento
+    if (updatedUser.modifiedCount === 0) {
+      return NextResponse.json({ error: "No changes made" }, { status: 400 })
+    }
+
+    return NextResponse.json({ message: "User updated successfully" }, { status: 200 })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
