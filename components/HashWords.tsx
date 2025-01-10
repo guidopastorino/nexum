@@ -23,18 +23,18 @@ const HashWords: React.FC<HashWordsProps> = ({ text, maskedId }) => {
 
     if (urlRegex.test(word)) {
       const link = word.startsWith('http') ? word : `https://${word}`
-      return <Link href={link} className='w-full text-blue-500 hover:underline break-all'>{link}</Link>
+      return <Link href={link} target='_blank' className='w-full text-blue-500 hover:underline break-all'>{link}</Link>
     } else if (word.startsWith('#')) {
       return (
-        <a key={word} href={`/hashtags/${word.substring(1)}`} className="text-blue-500 hover:underline">
+        <Link key={word} href={`/hashtags/${word.substring(1)}`} className="text-blue-500 hover:underline">
           {word}
-        </a>
+        </Link>
       );
     } else if (word.startsWith('@')) {
       return (
-        <a key={word} href={`/${word.substring(1)}`} className="text-blue-500 hover:underline">
+        <Link key={word} href={`/${word.substring(1)}`} className="text-blue-500 hover:underline">
           {word}
-        </a>
+        </Link>
       );
     }
 
