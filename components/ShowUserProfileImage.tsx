@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom'
 
 type ShowUserProfileImageProps = {
   children: React.ReactNode;
@@ -13,18 +14,23 @@ const ShowUserProfileImage = ({ children, userProfileImageUrl }: ShowUserProfile
       {React.cloneElement(children as React.ReactElement, { onClick: () => setViewer(!viewer) })}
 
       {viewer && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center">
-          <div 
-            onClick={() => setViewer(false)} 
-            className="absolute inset-0 bg-black/70 z-40"
-          ></div>
+        <>
+          {ReactDOM.createPortal(
+            <div className="fixed inset-0 z-[999] flex justify-center items-center">
+              <div
+                onClick={() => setViewer(false)}
+                className="absolute inset-0 bg-black/70 z-40"
+              ></div>
 
-          <img 
-            className="max-w-xl object-contain relative z-50" 
-            src={userProfileImageUrl} 
-            alt="profile image" 
-          />
-        </div>
+              <img
+                className="max-w-xl object-contain relative z-50"
+                src={userProfileImageUrl}
+                alt="profile image"
+              />
+            </div>,
+            document.body
+          )}
+        </>
       )}
     </>
   );
