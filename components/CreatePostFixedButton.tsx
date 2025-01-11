@@ -80,12 +80,16 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
 
     const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 
-    const oversizedFile = files.find(file => file.size > MAX_FILE_SIZE);
-
-    if (oversizedFile) {
-      alert('El archivo es demasiado grande. El tamaño máximo es 4MB.');
-      return;
+    for (const file of files) {
+      console.log(`${file.name} size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
     }
+
+    // const oversizedFile = files.find(file => file.size > MAX_FILE_SIZE);
+
+    // if (oversizedFile) {
+    //   alert('El archivo es demasiado grande. El tamaño máximo es 4MB.');
+    //   return;
+    // }
 
     setPost((prev) => ({
       ...prev,
