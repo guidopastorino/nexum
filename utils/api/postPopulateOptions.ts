@@ -1,3 +1,7 @@
+// Base case
+export const postSelectionFields =
+  "_id maskedId content media likes replies bookmarks quotes reposts type communityId feedId parentPost replyingTo createdAt";
+
 export const postPopulateOptions = [
   {
     path: "creator",
@@ -6,7 +10,7 @@ export const postPopulateOptions = [
   {
     path: "repostedFrom",
     select:
-      "_id maskedId creator communityId feedId content quotedPost media likes comments bookmarks quotes reposts type communityId feedId createdAt",
+      "_id maskedId creator communityId feedId content quotedPost media likes replies bookmarks quotes reposts type communityId feedId parentPost replyingTo createdAt",
     populate: [
       {
         path: "creator",
@@ -14,7 +18,7 @@ export const postPopulateOptions = [
       },
       {
         path: "quotedPost",
-        select: "_id maskedId creator content media createdAt",
+        select: "_id maskedId creator content media parentPost replyingTo createdAt",
         populate: {
           path: "creator",
           select: "_id profileImage fullname username",
@@ -24,18 +28,26 @@ export const postPopulateOptions = [
   },
   {
     path: "quotedPost",
-    select: "creator maskedId content media createdAt",
+    select: "creator maskedId content media parentPost replyingTo createdAt",
     populate: {
       path: "creator",
       select: "_id profileImage fullname username",
     },
   },
   {
-    path: "comments",
-    select: "_id content createdAt",
+    path: "replies",
+    select: "_id maskedId creator communityId content likes replies bookmarks quotes reposts media parentPost replyingTo type createdAt",
+  },
+  {
+    path: "parentPost",
+    select: postSelectionFields,
+    populate: {
+      path: "creator",
+      select: "_id fullname username profileImage",
+    },
+  },
+  {
+    path: "replyingTo",
+    select: "_id username",
   },
 ];
-
-// Base case
-export const postSelectionFields =
-  "_id maskedId content media likes comments bookmarks quotes reposts type communityId feedId createdAt";

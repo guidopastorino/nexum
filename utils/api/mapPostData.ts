@@ -8,7 +8,6 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
       const postId = post._id.toString();
       const creatorId = post.creator._id.toString();
 
-      // base case (normal post)
       const isFollowing = userId ? Boolean(await User.exists({ _id: userId, following: creatorId })) : false;
       const isPinned = Boolean(await User.exists({ _id: creatorId, pinnedPosts: postId })) || false;
       const isHighlighted = userId ? Boolean(await User.exists({ _id: userId, highlightedPosts: postId })) : false;
@@ -17,7 +16,6 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
       const isBlocked = userId ? Boolean(await User.exists({ _id: userId, blockedUsers: creatorId })) : false;
       const isConversationMuted = userId ? Boolean(await User.exists({ _id: userId, mutedConversations: postId })) : false;
 
-      // for isLiked, isBookmarked, isReposted and isQuoted states
       const checkUserInteraction = (list: Types.ObjectId[] | undefined) =>
         userId && Array.isArray(list) && list.some((id: Types.ObjectId) => id.toString() === userId);
 
@@ -33,7 +31,7 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
         content: post.repostedFrom.content,
         media: post.repostedFrom.media,
         likesCount: post.repostedFrom.likes?.length || 0,
-        commentsCount: post.repostedFrom.comments?.length || 0,
+        repliesCount: post.repostedFrom.replies?.length || 0,
         bookmarksCount: post.repostedFrom.bookmarks?.length || 0,
         quotesCount: post.repostedFrom.quotes?.length || 0,
         repostsCount: post.repostedFrom.reposts?.length || 0,
@@ -60,6 +58,7 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
           },
           content: post.repostedFrom.quotedPost.content,
           media: post.repostedFrom.quotedPost.media,
+          parentPost: post.repostedFrom.quotedPost.parentPost,
           createdAt: post.repostedFrom.quotedPost.createdAt,
         } : undefined,
       } : undefined;
@@ -78,6 +77,23 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
         createdAt: post.quotedPost.createdAt,
       } : undefined;
 
+      const parentPost = post.parentPost ? {
+        _id: post.parentPost._id.toString(),
+        content: post.parentPost.content,
+        creator: {
+          _id: post.parentPost.creator._id.toString(),
+          fullname: post.parentPost.creator.fullname,
+          username: post.parentPost.creator.username,
+          profileImage: post.parentPost.creator.profileImage,
+        },
+        createdAt: post.parentPost.createdAt,
+      } : null;
+
+      const replyingTo = post.replyingTo ? {
+        _id: post.replyingTo._id.toString(),
+        username: post.replyingTo.username,
+      } : null;
+
       return {
         _id: post._id.toString(),
         maskedId: post.maskedId,
@@ -93,7 +109,7 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
         media: post.media,
         type: post.type,
         likesCount: post.likes?.length || 0,
-        commentsCount: post.comments?.length || 0,
+        repliesCount: post.replies?.length || 0,
         bookmarksCount: post.bookmarks?.length || 0,
         quotesCount: post.quotes?.length || 0,
         repostsCount: Array.isArray(post.reposts) ? post.reposts.length : 0,
@@ -111,6 +127,8 @@ export const mapPostData = async (posts: any[], userId: string | null = null) =>
         createdAt: post.createdAt,
         repostedFrom,
         quotedPost,
+        parentPost,
+        replyingTo,
       };
     })
   );
