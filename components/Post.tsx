@@ -24,6 +24,7 @@ import RepostButton from './buttons/post/RepostButton';
 import { useParams, usePathname } from 'next/navigation';
 import { useRouter } from 'nextjs-toploader/app';
 import MediaGallery from './MediaGallery';
+import PostOptionsMenu from './post/PostOptionsMenu';
 
 // Recibe los datos del post como props
 const Post = ({
@@ -40,7 +41,7 @@ const Post = ({
   createdAt,
   isLiked,
   likesCount,
-  commentsCount,
+  repliesCount,
   bookmarksCount,
   quotesCount,
   repostsCount,
@@ -119,54 +120,26 @@ const Post = ({
               <span>{timeAgo(createdAt)}</span>
             </div>
             {/* options btn */}
-            <div>
-              <ResponsiveMenu
-                trigger={
-                  <button className="postButton">
-                    <BsThreeDots />
-                  </button>
-                }
-                dropdownMenuOptions={{
-                  width: 300, // 300px
-                  canClickOtherElements: false,
-                }}
-              >
-                {(menuOpen, setMenuOpen) => (
-                  <>
-                    <LoggedOut>
-                      <GuestPostMenu creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} />
-                    </LoggedOut>
-                    <LoggedIn>
-                      <>
-                        {user.username === creator.username ? (
-                          <OwnerPostMenu
-                            type={quotedPost ? 'quote' : 'normal'}
-                            creatorUsername={creator.username}
-                            userId={creator._id}
-                            postId={_id}
-                            setMenuOpen={setMenuOpen}
-                            states={{
-                              isPinned: initialPinnedState,
-                              setInitialPinnedState,
-                              isHighlighted,
-                              isOnList,
-                              isConversationMuted,
-                            }} />
-                        ) : (
-                          <OtherUserPostMenu userId={creator._id} creatorUsername={creator.username} postId={maskedId} setMenuOpen={setMenuOpen} states={{
-                            isFollowing: initialFollowState,
-                            setInitialFollowState,
-                            isOnList,
-                            isUserMuted,
-                            isBlocked,
-                          }} />
-                        )}
-                      </>
-                    </LoggedIn>
-                  </>
-                )}
-              </ResponsiveMenu>
-            </div>
+            <PostOptionsMenu
+              creator={{ username: creator.username, _id: creator._id }}
+              maskedId={maskedId}
+              _id={_id}
+              quotedPost={!!quotedPost}
+              states={{
+                isPinned: initialPinnedState,
+                setInitialPinnedState,
+                isHighlighted,
+                isOnList,
+                isConversationMuted,
+              }}
+              otherUserStates={{
+                isFollowing: initialFollowState,
+                setInitialFollowState,
+                isOnList,
+                isUserMuted,
+                isBlocked,
+              }}
+            />
           </div>
           {/* content and media */}
           <div>
@@ -186,7 +159,7 @@ const Post = ({
                     <span>·</span>
                     <span>{timeAgo(quotedPost.createdAt)}</span>
                   </div>
-                  <span>{quotedPost?.content}</span>
+                  {quotedPost?.content && <HashWords text={quotedPost?.content} maskedId={quotedPost?.maskedId} />}
                   <MediaGallery media={quotedPost?.media ?? []} />
                 </Link>
               </> : <div className='p-3 text-sm rounded-md border borderColor cursor-auto'>Quoted post unavailable</div>
@@ -207,7 +180,7 @@ const Post = ({
                 <button className="postButton">
                   <HiOutlineChatBubbleOvalLeft />
                 </button>
-                <span>{commentsCount}</span>
+                <span>{repliesCount}</span>
               </div>
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
@@ -239,6 +212,14 @@ const Post = ({
                       <QuoteButton
                         postId={_id}
                         setMenuOpen={setMenuOpen}
+                        quotedPost={{
+                          profileImage: creator?.profileImage!,
+                          fullname: creator?.fullname!,
+                          username: creator?.username!,
+                          content: content! ?? '',
+                          media: media! ?? [],
+                          createdAt: createdAt!,
+                        }}
                       />
                     </>
                   )}
@@ -322,54 +303,26 @@ const Post = ({
               <span>{timeAgo(repostedFrom?.createdAt as Date)}</span> {/* */}
             </div>
             {/* options btn */}
-            <div>
-              <ResponsiveMenu
-                trigger={
-                  <button className="postButton">
-                    <BsThreeDots />
-                  </button>
-                }
-                dropdownMenuOptions={{
-                  width: 300, // 300px
-                  canClickOtherElements: false,
-                }}
-              >
-                {(menuOpen, setMenuOpen) => (
-                  <>
-                    <LoggedOut>
-                      <GuestPostMenu creatorUsername={repostedFrom?.creator.username!} postId={repostedFrom?.maskedId!} setMenuOpen={setMenuOpen} />
-                    </LoggedOut>
-                    <LoggedIn>
-                      <>
-                        {user.username === repostedFrom?.creator.username! ? (
-                          <OwnerPostMenu
-                            type={repostedFrom?.quotedPost ? 'quote' : 'normal'}
-                            creatorUsername={repostedFrom?.creator.username!}
-                            userId={repostedFrom?.creator._id!}
-                            postId={repostedFrom?._id!}
-                            setMenuOpen={setMenuOpen}
-                            states={{
-                              isPinned: initialPinnedState,
-                              setInitialPinnedState,
-                              isHighlighted,
-                              isOnList,
-                              isConversationMuted,
-                            }} />
-                        ) : (
-                          <OtherUserPostMenu userId={repostedFrom?.creator._id!} creatorUsername={repostedFrom?.creator.username!} postId={repostedFrom?.maskedId!} setMenuOpen={setMenuOpen} states={{
-                            isFollowing: initialFollowState,
-                            setInitialFollowState,
-                            isOnList,
-                            isUserMuted,
-                            isBlocked,
-                          }} />
-                        )}
-                      </>
-                    </LoggedIn>
-                  </>
-                )}
-              </ResponsiveMenu>
-            </div>
+            <PostOptionsMenu
+              creator={{ username: repostedFrom?.creator.username!, _id: repostedFrom?.creator._id! }}
+              maskedId={repostedFrom?.maskedId!}
+              _id={repostedFrom?._id!}
+              quotedPost={!!repostedFrom?.quotedPost}
+              states={{
+                isPinned: initialPinnedState,
+                setInitialPinnedState,
+                isHighlighted,
+                isOnList,
+                isConversationMuted,
+              }}
+              otherUserStates={{
+                isFollowing: initialFollowState,
+                setInitialFollowState,
+                isOnList,
+                isUserMuted,
+                isBlocked,
+              }}
+            />
           </div>
           {/* content and media */}
           <div>
@@ -410,7 +363,7 @@ const Post = ({
                 <button className="postButton">
                   <HiOutlineChatBubbleOvalLeft />
                 </button>
-                <span>{repostedFrom?.commentsCount}</span>
+                <span>{repostedFrom?.repliesCount}</span>
               </div>
               {/* repost & quote */}
               <div className='flex justify-center items-center gap-0.5'>
@@ -442,6 +395,14 @@ const Post = ({
                       <QuoteButton
                         postId={repostedFrom?._id!}
                         setMenuOpen={setMenuOpen}
+                        quotedPost={{
+                          profileImage: repostedFrom?.creator?.profileImage!,
+                          fullname: repostedFrom?.creator?.fullname!,
+                          username: repostedFrom?.creator?.username!,
+                          content: repostedFrom?.content! ?? '',
+                          media: repostedFrom?.media! ?? [],
+                          createdAt: repostedFrom?.createdAt!,
+                        }}
                       />
                     </>
                   )}
