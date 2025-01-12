@@ -24,6 +24,7 @@ import { useDispatch } from 'react-redux';
 import { setUser } from '@/store/user/userSlice';
 import { utapi } from "@/server/uploadthing";
 import { resizeImage } from '@/utils/resizeImage';
+import useModal from '@/hooks/useModal';
 
 type UserProfileButtonsProps = {
   disableIfSameUser?: boolean;
@@ -44,10 +45,12 @@ const UserProfileButtons: React.FC<UserProfileButtonsProps> = ({
   isFollowedByUser,
   postId
 }) => {
+  const { handleOpenModal, handleCloseModal } = useModal('globalModal');
+
   const { data: session } = useSession();
   const user = useUser()
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); // para actualizar el estado del usuario actual
 
   const queryClient = useQueryClient()
 
@@ -214,6 +217,84 @@ const UserProfileButtons: React.FC<UserProfileButtonsProps> = ({
     }
   };
 
+  const openUpdateProfileModal = () => {
+    handleOpenModal(
+      <div className="bg-white dark:bg-neutral-800 p-3">
+        {/*  */}
+        <input
+          ref={ProfileImageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={(event) => handleMediaFilesChange(event, 'profileImage')}
+          hidden
+        />
+        <input
+          ref={BannerImageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={(event) => handleMediaFilesChange(event, 'bannerImage')}
+          hidden
+        />
+        {/*  */}
+        <div className="relative w-full">
+          {/* banner */}
+          <div className='h-[150px]'>
+            <img
+              src={userUpdatedData.bannerImage ? URL.createObjectURL(userUpdatedData.bannerImage) : (user.bannerImage || "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg")}
+              className="w-full h-full object-cover"
+            />
+            <button onClick={() => BannerImageInputRef.current?.click()} className='hover:brightness-90 absolute top-2 right-2 w-7 h-7 text-xs rounded-full flex justify-center items-center text-white bg-black cursor-pointer'><FaCamera /></button>
+          </div>
+          {/* user info */}
+          <div className='flex flex-col justify-center items-stretch gap-2 p-4 mt-14'>
+            {/* fullname */}
+            <p className="font-medium pt-2">Fullname</p>
+            <input
+              type="text"
+              name="fullname"
+              className="formInput"
+              value={userUpdatedData.fullname} // Usar el estado aquí
+              onChange={handleInputChange}
+            />
+            {/* description */}
+            <p className="font-medium pt-2">Description</p>
+            <textarea
+              name="description"
+              className="formInput"
+              value={userUpdatedData.description || ""} // Usar el estado aquí
+              onChange={handleInputChange}
+              placeholder="Description"
+            />
+          </div>
+          {/* profile image */}
+          <div className='top-28 left-3 absolute z-20'>
+            <div className="relative w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden shadow-lg">
+              <img
+                src={userUpdatedData.profileImage ? URL.createObjectURL(userUpdatedData.profileImage) : (user.profileImage || "/default_pfp.jpg")}
+                className="w-full h-full object-cover object-center cursor-pointer hover:brightness-90 duration-100"
+              />
+            </div>
+            <button onClick={() => ProfileImageInputRef.current?.click()} className='hover:brightness-90 absolute top-2 right-2 w-7 h-7 text-xs rounded-full flex justify-center items-center text-white bg-black cursor-pointer'><FaCamera /></button>
+          </div>
+        </div>
+
+        <div className="w-full mt-2 flex justify-end items-center gap-2">
+          {isEditing && <button onClick={() => setUserUpdatedData({
+            fullname: '',
+            description: '',
+            profileImage: null,
+            bannerImage: null,
+          })} className='w-9 h-9 flex justify-center items-center rounded-full text-red-700 border borderColor itemHover'>
+            <BsTrash />
+          </button>}
+          <button disabled={loading} onClick={updateProfile} className={`px-4 h-9 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
+            {loading ? "Saving changes..." : "Save changes"}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // Si no hay sesión, renderiza AuthModal o nada según disableIfSameUser
   if (!session) {
     return !disableIfSameUser ? (
@@ -235,91 +316,13 @@ const UserProfileButtons: React.FC<UserProfileButtonsProps> = ({
   // Si el usuario logueado es el mismo, renderiza "Editar perfil"
   if (session.user.id === userId) {
     return (
-      <Modal
-        buttonTrigger={
-          <div
-            className="h-9 rounded-full py-3 px-4 gap-3 font-medium flex justify-center items-center itemHover border border-gray-200 dark:border-neutral-700/70"
-          >
-            <HiPencil />
-            <span>Editar perfil</span>
-          </div>
-        }
-        width={500}
+      <div
+        onClick={openUpdateProfileModal}
+        className="h-9 rounded-full py-3 px-4 gap-3 font-medium flex justify-center items-center itemHover border border-gray-200 dark:border-neutral-700/70"
       >
-        <div className="bg-white dark:bg-neutral-800 p-3">
-          {/*  */}
-          <input
-            ref={ProfileImageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(event) => handleMediaFilesChange(event, 'profileImage')}
-            hidden
-          />
-          <input
-            ref={BannerImageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(event) => handleMediaFilesChange(event, 'bannerImage')}
-            hidden
-          />
-          {/*  */}
-          <div className="relative w-full">
-            {/* banner */}
-            <div className='h-[150px]'>
-              <img
-                src={userUpdatedData.bannerImage ? URL.createObjectURL(userUpdatedData.bannerImage) : (user.bannerImage || "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg")}
-                className="w-full h-full object-cover"
-              />
-              <button onClick={() => BannerImageInputRef.current?.click()} className='hover:brightness-90 absolute top-2 right-2 w-7 h-7 text-xs rounded-full flex justify-center items-center text-white bg-black cursor-pointer'><FaCamera /></button>
-            </div>
-            {/* user info */}
-            <div className='flex flex-col justify-center items-stretch gap-2 p-4 mt-14'>
-              {/* fullname */}
-              <p className="font-medium pt-2">Fullname</p>
-              <input
-                type="text"
-                name="fullname"
-                className="formInput"
-                value={userUpdatedData.fullname} // Usar el estado aquí
-                onChange={handleInputChange}
-              />
-              {/* description */}
-              <p className="font-medium pt-2">Description</p>
-              <textarea
-                name="description"
-                className="formInput"
-                value={userUpdatedData.description || ""} // Usar el estado aquí
-                onChange={handleInputChange}
-                placeholder="Description"
-              />
-            </div>
-            {/* profile image */}
-            <div className='top-28 left-3 absolute z-20'>
-              <div className="relative w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden shadow-lg">
-                <img
-                  src={userUpdatedData.profileImage ? URL.createObjectURL(userUpdatedData.profileImage) : (user.profileImage || "/default_pfp.jpg")}
-                  className="w-full h-full object-cover object-center cursor-pointer hover:brightness-90 duration-100"
-                />
-              </div>
-              <button onClick={() => ProfileImageInputRef.current?.click()} className='hover:brightness-90 absolute top-2 right-2 w-7 h-7 text-xs rounded-full flex justify-center items-center text-white bg-black cursor-pointer'><FaCamera /></button>
-            </div>
-          </div>
-
-          <div className="w-full mt-2 flex justify-end items-center gap-2">
-            {isEditing && <button onClick={() => setUserUpdatedData({
-              fullname: '',
-              description: '',
-              profileImage: null,
-              bannerImage: null,
-            })} className='w-9 h-9 flex justify-center items-center rounded-full text-red-700 border borderColor itemHover'>
-              <BsTrash />
-            </button>}
-            <button disabled={loading} onClick={updateProfile} className={`px-4 h-9 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
-              {loading ? "Saving changes..." : "Save changes"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        <HiPencil />
+        <span>Editar perfil</span>
+      </div>
     );
   }
 
