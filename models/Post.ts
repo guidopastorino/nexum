@@ -4,14 +4,9 @@ import mongoose, { Schema, model, Types, Document } from 'mongoose';
 // Subesquema para MediaFile
 const MediaFileSchema = new Schema({
   name: { type: String, required: true },
-  size: { type: Number, required: true },
   key: { type: String, required: true },
-  lastModified: { type: Number, required: true },
   url: { type: String, required: true },
-  appUrl: { type: String, required: true },
-  customId: { type: String, default: null },
   type: { type: String, required: true },
-  fileHash: { type: String, required: true },
 });
 
 interface PostDocument extends Document {
@@ -21,7 +16,7 @@ interface PostDocument extends Document {
   communityId?: Types.ObjectId;
   content: string;
   likes: Types.ObjectId[];
-  comments: Types.ObjectId[];
+  replies: Types.ObjectId[];
   bookmarks: Types.ObjectId[];
   quotes: Types.ObjectId;
   reposts: Types.ObjectId;
@@ -41,21 +36,24 @@ const PostSchema = new Schema<PostDocument>(
     communityId: { type: Schema.Types.ObjectId, ref: 'Community' },
     content: { type: String },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    comments: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
+    replies: [{ type: Schema.Types.ObjectId, ref: 'Post' }], // even a reply uses a 'Post' model
     bookmarks: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     quotes: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     reposts: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     repostedFrom: { type: Schema.Types.ObjectId, ref: 'Post' },
     quotedPost: { type: Schema.Types.ObjectId, ref: 'Post' },
     media: { type: [MediaFileSchema], default: [] },
-    parentPost: { type: Schema.Types.ObjectId, ref: 'Post' }, // si esta opcion existe, el post es una respuesta
-    replyingTo: { type: Schema.Types.ObjectId, ref: 'Post' }, // si esta opcion existe, el post es una respuesta
-    type: { type: String, enum: ['normal', 'repost', 'quote'], default: 'normal' },
+    parentPost: { type: Schema.Types.ObjectId, ref: 'Post' }, // Id del post al que se está respondiendo
+    replyingTo: { type: Schema.Types.ObjectId, ref: 'User' }, // Id del usuario al que se está respondiendo
+    type: { type: String, enum: ['normal', 'repost', 'quote', 'reply'], default: 'normal' },
   },
   {
     timestamps: true,
   }
 );
+
+// nombres de las propiedades definidas en el esquema de Mongoose para el modelo PostSchema
+// console.log(Object.keys(PostSchema.paths));
 
 // Creación de índices
 PostSchema.index({ content: 'text' }, { weights: { content: 1 } });
