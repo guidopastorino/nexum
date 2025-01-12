@@ -20,6 +20,8 @@ import { FeedItemProps } from '@/types/types';
 import FeedItem from '@/components/FeedItem';
 import { useSession } from 'next-auth/react';
 import PageHeader from '@/components/PageHeader';
+import useModal from '@/hooks/useModal';
+import { resizeImage } from '@/utils/resizeImage';
 
 // devuelve los feeds del usuario actual logeado
 const fetchUserFeeds = async (): Promise<FeedItemProps[]> => {
@@ -102,7 +104,7 @@ const page = () => {
 
 export default page
 
-const CreateNewFeedButton = () => {
+const ModalContent = () => {
   const queryClient = useQueryClient()
 
   const { data: session } = useSession()
@@ -110,9 +112,9 @@ const CreateNewFeedButton = () => {
   const [feedPicture, setFeedPicture] = useState<File | null>(null);
   const InputFeedPicture = useRef<HTMLInputElement | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    const file = e.target.files[0];
+    const file = e.target.files[0]
     setFeedPicture(file);
   };
 
@@ -134,7 +136,10 @@ const CreateNewFeedButton = () => {
 
         if (feedPicture) {
           const formData = new FormData();
-          formData.append("files", feedPicture);
+
+          const resizedFeedPicture = await resizeImage(feedPicture, 48, 48, 1);
+
+          formData.append("files", resizedFeedPicture);
 
           // Simulación de carga de imagen
           const uploadResponse = await uploadFiles(formData)
@@ -161,95 +166,100 @@ const CreateNewFeedButton = () => {
   });
 
   return (
-    <Modal
-      buttonTrigger={
-        <div className="w-10 h-10 flex justify-center items-center itemHover">
-          <BsPlus size={24} />
-        </div>
-      }
-      width={500}
-    >
-      <form onSubmit={formik.handleSubmit}>
-        <div className="bg-white dark:bg-neutral-800 p-4">
-          <span className="text-2xl font-medium block border-b borderColor pb-2 mb-4">
-            Create new feed
-          </span>
-          <span className="my-3 text-sm opacity-80 block">
-            Custom feeds allow users to create personalized feeds based on multiple communities, meaning all the content
-            is in one place. Custom feeds are great for grouping communities that are about the same topic.
-          </span>
-          <div className="flex gap-4">
+    <form onSubmit={formik.handleSubmit}>
+      <div className="bg-white dark:bg-neutral-800 p-4">
+        <span className="text-2xl font-medium block border-b borderColor pb-2 mb-4">
+          Create new feed
+        </span>
+        <span className="my-3 text-sm opacity-80 block">
+          Custom feeds allow users to create personalized feeds based on multiple communities, meaning all the content
+          is in one place. Custom feeds are great for grouping communities that are about the same topic.
+        </span>
+        <div className="flex gap-4">
+          <input
+            ref={InputFeedPicture}
+            onChange={handleInputChange}
+            type="file"
+            accept="image/*"
+            hidden
+          />
+          <img
+            onClick={() => InputFeedPicture.current?.click()}
+            className="w-20 h-20 rounded-sm object-cover shrink-0 cursor-pointer hover:brightness-90 duration-100"
+            src={feedPicture ? URL.createObjectURL(feedPicture) : "/default_pfp.jpg"}
+            alt="feed picture"
+          />
+          <div className="flex-1">
             <input
-              ref={InputFeedPicture}
-              onChange={handleInputChange}
-              type="file"
-              accept="image/*"
-              hidden
+              id="title"
+              name="title"
+              className={`formInput bg-transparent ${formik.touched.title && formik.errors.title ? "border-red-500" : ""
+                }`}
+              type="text"
+              placeholder="Feed title"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.title}
             />
-            <img
-              onClick={() => InputFeedPicture.current?.click()}
-              className="w-20 h-20 rounded-sm object-cover shrink-0 cursor-pointer hover:brightness-90 duration-100"
-              src={feedPicture ? URL.createObjectURL(feedPicture) : "/default_pfp.jpg"}
-              alt="feed picture"
-            />
-            <div className="flex-1">
-              <input
-                id="title"
-                name="title"
-                className={`formInput bg-transparent ${formik.touched.title && formik.errors.title ? "border-red-500" : ""
-                  }`}
-                type="text"
-                placeholder="Feed title"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.title}
-              />
-              {formik.touched.title && formik.errors.title && (
-                <span className="text-red-500 text-sm">{formik.errors.title}</span>
-              )}
-              <textarea
-                id="description"
-                name="description"
-                className={`formInput mt-4 bg-transparent ${formik.touched.description && formik.errors.description ? "border-red-500" : ""
-                  }`}
-                placeholder="Feed description"
-                maxLength={50}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.description}
-              ></textarea>
-              {formik.touched.description && formik.errors.description && (
-                <span className="text-red-500 text-sm">{formik.errors.description}</span>
-              )}
-              <span className="my-2 block">Privacy</span>
-              <div className="grid grid-cols-2 border borderColor rounded-md">
-                <div
-                  onClick={() => formik.setFieldValue("privacy", "public")}
-                  className={`${formik.values.privacy === "public" ? "bg-gray-100 dark:bg-neutral-700/50" : ""
-                    } flex justify-center items-center cursor-pointer itemHover p-2`}
-                >
-                  Public
-                </div>
-                <div
-                  onClick={() => formik.setFieldValue("privacy", "private")}
-                  className={`${formik.values.privacy === "private" ? "bg-gray-100 dark:bg-neutral-700/50" : ""
-                    } flex justify-center items-center cursor-pointer itemHover p-2`}
-                >
-                  Private
-                </div>
+            {formik.touched.title && formik.errors.title && (
+              <span className="text-red-500 text-sm">{formik.errors.title}</span>
+            )}
+            <textarea
+              id="description"
+              name="description"
+              className={`formInput mt-4 bg-transparent ${formik.touched.description && formik.errors.description ? "border-red-500" : ""
+                }`}
+              placeholder="Feed description"
+              maxLength={50}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.description}
+            ></textarea>
+            {formik.touched.description && formik.errors.description && (
+              <span className="text-red-500 text-sm">{formik.errors.description}</span>
+            )}
+            <span className="my-2 block">Privacy</span>
+            <div className="grid grid-cols-2 border borderColor rounded-md">
+              <div
+                onClick={() => formik.setFieldValue("privacy", "public")}
+                className={`${formik.values.privacy === "public" ? "bg-gray-100 dark:bg-neutral-700/50" : ""
+                  } flex justify-center items-center cursor-pointer itemHover p-2`}
+              >
+                Public
+              </div>
+              <div
+                onClick={() => formik.setFieldValue("privacy", "private")}
+                className={`${formik.values.privacy === "private" ? "bg-gray-100 dark:bg-neutral-700/50" : ""
+                  } flex justify-center items-center cursor-pointer itemHover p-2`}
+              >
+                Private
               </div>
             </div>
           </div>
-          <div className="flex justify-end items-end mt-4">
-            <button
-              type="submit"
-              className="px-3 py-2 rounded-md bg-orange-700 hover:brightness-90 active:brightness-85 duration-100"
-            >
-              Create feed
-            </button>
-          </div>
         </div>
-      </form>
-    </Modal>
+        <div className="flex justify-end items-end mt-4">
+          <button
+            type="submit"
+            className="px-3 py-2 rounded-md bg-orange-700 hover:brightness-90 active:brightness-85 duration-100"
+          >
+            Create feed
+          </button>
+        </div>
+      </div>
+    </form>
+  )
+}
+
+const CreateNewFeedButton = () => {
+  const { handleOpenModal } = useModal("globalModal")
+
+  const openCreateNewFeedModal = () => {
+    handleOpenModal(<ModalContent />)
+  }
+
+  return (
+    <div onClick={openCreateNewFeedModal} className="w-10 h-10 flex justify-center items-center itemHover">
+      <BsPlus size={24} />
+    </div>
   );
 };
