@@ -1,105 +1,98 @@
-"use client"
-
-import React, { cloneElement, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import ReactDOM from 'react-dom';
+import useModal from '@/hooks/useModal';
+import { closeModal } from '@/store/modal/modalSlice';
 
 interface ModalProps {
-  buttonTrigger: React.ReactElement<any, any>;
+  modalId: string;
+  width?: string;
   children: React.ReactNode;
-  width?: number; // pizels
-  isOpen?: boolean;
-  onClose?: () => void; // Prop opcional
-  closeOnDarkClick?: boolean;
+  isOpen: boolean;
 }
 
-const Modal = ({ buttonTrigger, children, width, isOpen, onClose, closeOnDarkClick = true }: ModalProps) => {
-  const [modal, setModal] = useState<boolean>(isOpen ?? false);
+const Modal: React.FC<ModalProps> = ({
+  modalId,
+  width = '500px',
+  children,
+  isOpen,
+}) => {
+  const { handleCloseModal } = useModal('globalModal');
+  const dispatch = useDispatch();
   const [animation, setAnimation] = useState<boolean>(false);
-  const ModalRef = useRef<HTMLDivElement | null>(null);
-  const [isClient, setIsClient] = useState<boolean>(false);
-  const [isScreenHeightLarge, setIsScreenHeightLarge] = useState<boolean>(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const [isScreenHeightLarge, setIsScreenHeightLarge] =
+    useState<boolean>(false);
 
   useEffect(() => {
-    setIsClient(true);
     setIsScreenHeightLarge(window.innerHeight > 400);
   }, []);
 
+  const handleCloseModalAux = () => {
+    setAnimation(false);
+    setTimeout(() => {
+      handleCloseModal();
+    }, 300);
+  };
+
   useEffect(() => {
-    if (modal) {
+    if (isOpen) {
       setAnimation(true);
     } else {
       setAnimation(false);
+      setTimeout(() => dispatch(closeModal()), 200);
     }
-  }, [modal]);
+  }, [isOpen, dispatch]);
 
   useEffect(() => {
-    if (!animation) {
-      setTimeout(() => {
-        setModal(false);
-        onClose?.(); // Llama a `onClose` si está disponible
-      }, 200);
-    }
-  }, [animation, onClose]);
-
-  useEffect(() => {
-    const handler1 = (e: KeyboardEvent) => {
-      if (modal && e.code === 'Escape') {
-        setAnimation(false);
-        onClose?.(); // Cierra el modal y llama a `onClose` si está disponible
+    const handleEscape = (e: KeyboardEvent) => {
+      if (isOpen && e.code === 'Escape') {
+        handleCloseModalAux();
       }
     };
 
-    const handler2 = (e: MouseEvent) => {
-      if (modal && ModalRef.current) {
-        if (!ModalRef.current.contains(e.target as Node)) {
-          // Solo cierra el modal si `closeOnDarkClick` es verdadero
-          if (closeOnDarkClick) {
-            setAnimation(false);
-            onClose?.();  // Llama a `onClose` si está disponible
-          }
-        }
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        isOpen &&
+        modalRef.current &&
+        !modalRef.current.contains(e.target as Node)
+      ) {
+        handleCloseModalAux();
       }
     };
 
-    document.addEventListener('keyup', handler1);
-    document.addEventListener('mousedown', handler2);
+    document.addEventListener('keyup', handleEscape);
+    document.addEventListener('mousedown', handleOutsideClick);
 
     return () => {
-      document.removeEventListener('keyup', handler1);
-      document.removeEventListener('mousedown', handler2);
+      document.removeEventListener('keyup', handleEscape);
+      document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, [modal, closeOnDarkClick]);
+  }, [isOpen]);
 
-  const modalWidth: number = width ? width : 384;
+  if (!isOpen) return null;
 
-  return (
-    <>
-      {cloneElement(buttonTrigger, { onClick: () => setModal(!modal) })}
-
-      {modal && ReactDOM.createPortal(
-        <div
-          className={`
-            ${animation ? 'opacity-1' : 'opacity-0'}
-            fixed top-0 left-0 flex justify-center py-5 overflow-y-auto
-            ${isScreenHeightLarge ? 'items-center' : 'items-start'}
-            w-full h-dvh dark:bg-neutral-900/60 bg-neutral-800/60 z-50 duration-300
-            modalShadowBackground
-          `}
-        >
-          <div
-            ref={ModalRef}
-            style={{ maxWidth: `${modalWidth}px` }}
-            className={`
-              ${animation ? 'scale-100' : 'scale-[.96]'}
-              h-auto max-h-[600px] overflow-y-auto w-[90%] shadow-lg rounded-md overflow-hidden duration-100 select-none
-            `}
-          >
-            {children}
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
+  return ReactDOM.createPortal(
+    <div
+      className={`
+        ${animation ? 'opacity-1' : 'opacity-0'}
+        fixed top-0 left-0 flex justify-center py-5 overflow-y-auto
+        ${isScreenHeightLarge ? 'items-center' : 'items-start'}
+        w-full h-dvh bg-black/50 z-50 duration-300
+      `}
+    >
+      <div
+        ref={modalRef}
+        style={{ maxWidth: width }}
+        className={`
+          ${animation ? 'scale-100' : 'scale-[.96]'}
+          relative w-[90%] shadow-lg rounded-md duration-100 h-auto max-h-[90dvh] overflow-y-auto overflow-x-hidden
+        `}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body
   );
 };
 
