@@ -67,7 +67,7 @@ const RenderPost = ({
   createdAt,
   isLiked,
   likesCount,
-  commentsCount,
+  repliesCount,
   bookmarksCount,
   quotesCount,
   repostsCount,
