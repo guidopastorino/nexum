@@ -1,16 +1,9 @@
-"use client"
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react'
-import { BsPencilSquare } from 'react-icons/bs';
-import { IoIosArrowBack, IoMdArrowForward } from "react-icons/io";
-import { FiAlertTriangle } from "react-icons/fi";
-import { createPortal } from 'react-dom';
-import Modal from './modal/Modal';
+import React, { useEffect, useRef, useState } from 'react';
 import useUser from '@/hooks/useUser';
-import { MediaFile, UserState } from '@/types/types';
+import { NormalPostCreationProps } from '@/types/types';
 import LoggedIn from './auth/LoggedIn';
-import { createPost } from '@/utils/fetchFunctions';
-import { useQueryClient } from 'react-query';
 import useToast from '@/hooks/useToast';
 // icons
 import {
@@ -21,123 +14,53 @@ import {
   MdOutlineGifBox,
   MdCalendarMonth
 } from "react-icons/md";
-import { uploadFiles } from '@/actions/uploadFiles';
-import { useSession } from 'next-auth/react';
 import useScroll from '@/hooks/useScroll';
-import ReactCrop, { type Crop } from 'react-image-crop'
-import 'react-image-crop/dist/ReactCrop.css'
+import ReactCrop, { type Crop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { FaScissors } from 'react-icons/fa6';
-
-// The necessary props to create a post (normal)
-export interface PostCreationProps {
-  content: string;
-  media: File[];
-  type: string;
-}
+import useModal from '@/hooks/useModal';
+import { useCreatePost } from '@/hooks/useCreatePost';
 
 interface CreatePostFixedButtonProps {
   trigger: any;
 }
 
-const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }) => {
-  // 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface ModalContentProps {
+  initialMedia: Array<File>;
+  initialContent: string;
+}
 
-  const handleOnCloseModal = () => setIsModalOpen(false)
+const ModalContent: React.FC<ModalContentProps> = ({ initialMedia, initialContent }) => {
+  const { showToast } = useToast();
 
-  const user = useUser()
-  const { data: session } = useSession()
+  const { isModalOpen, handleOpenModal, handleCloseModal } = useModal('globalModal');
+  
+  const {
+    isLoading,
+    error,
+    selectedFiles,
+    post,
+    canPost,
+    setPost,
+    handleMediaFilesChange,
+    handleContentChange,
+    handleCreatePost,
+  } = useCreatePost<NormalPostCreationProps>('normal');
+
+  const user = useUser();
 
   const InputMediaFiles = useRef<HTMLInputElement | null>(null);
 
-  const [mounted, setMounted] = useState<boolean>(false)
-
-  useEffect(() => setMounted(true), [])
-
-  const queryClient = useQueryClient();
-
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-
-  const { showToast } = useToast()
-
-  const [post, setPost] = useState<PostCreationProps>({
-    content: "",
-    media: [],
-    type: "normal",
-  })
-
-  const [canPost, setCanPost] = useState<boolean>(false)
-
-  // se puede postear si el contenido no es vacio o la longitud de los archivos no es 0 
   useEffect(() => {
-    setCanPost(!!post.content.length || !!post.media.length);
-  }, [post.content, post.media]);
-
-  const handleMediaFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) return;
-
-    const files = Array.from(event.target.files);
-
-    const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
-
-    for (const file of files) {
-      console.log(`${file.name} size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-    }
-
-    // const oversizedFile = files.find(file => file.size > MAX_FILE_SIZE);
-
-    // if (oversizedFile) {
-    //   alert('El archivo es demasiado grande. El tamaño máximo es 4MB.');
-    //   return;
-    // }
-
-    setPost((prev) => ({
-      ...prev,
-      media: [...prev.media, ...files],
-    }));
-  };
-
-  const handleCreatePost = async () => {
-    setIsLoading(true);
-    try {
-      const formData = new FormData();
-
-      // Agregar todos los archivos al FormData
-      post.media.forEach((file) => {
-        formData.append("files", file);
+    // Restablecer el post cuando se cierra el modal
+    if (!isModalOpen) {
+      setPost({
+        content: '',
+        media: [],
+        type: 'normal',
       });
-
-      // Subir los archivos al servidor
-      const uploadResponse = await uploadFiles(formData);
-
-      // Extraer las URLs de los archivos subidos
-      const filesToBeUploaded = uploadResponse.map((res: any) => res.data);
-
-      const newPost = {
-        content: post.content,
-        media: filesToBeUploaded,
-        type: post.type
-      }
-
-      // Crear el post con el contenido actualizado
-      const res = await createPost(newPost);
-
-      showToast((res as any).message ?? (res as any).error);
-
-      setPost({ content: '', media: [], type: 'normal' })
-
-      // Invalidar caché
-      queryClient.invalidateQueries(['posts']);
-      queryClient.invalidateQueries(['creatorDataHoverCard', session?.user?.id]);
-      queryClient.invalidateQueries(['userProfile', session?.user?.id]);
-      queryClient.invalidateQueries(['userPosts', session?.user?.id], { refetchActive: true, refetchInactive: true });
-
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isModalOpen, setPost]);
 
   const ScrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -156,162 +79,151 @@ const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }
     height: 50,
     x: 25,
     y: 25
-  })
+  });
+
+  const openCropImageModal = (url: string, name: string) => {
+    handleOpenModal(
+      <ReactCrop crop={crop} onChange={(c) => setCrop(c)}>
+        <img src={url} alt={name} />
+      </ReactCrop>
+    );
+  };
+
+
+  return (
+    <div className="bg-white dark:bg-neutral-800 pt-2">
+      {/* carousel */}
+      {post?.media && post.media.length > 0 && (
+        <div className="relative w-full p-2">
+          {/* Botón izquierdo */}
+          {!isFromMobile && showButtonLeft && (
+            <button
+              onClick={scrollToLeft}
+              className="w-10 h-10 text-xl flex justify-center items-center absolute left-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
+            >
+              &#8249;
+            </button>
+          )}
+
+          {/* Contenedor scrollable */}
+          <div
+            ref={ScrollContainerRef}
+            className="w-full flex justify-start items-stretch overflow-x-auto gap-4"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {post.media.map((el, i) => {
+              const url = URL.createObjectURL(el);
+              if (el.type.startsWith('image')) {
+                return (
+                  <div className="relative" key={i}>
+                    {/* modal */}
+                    <button onClick={() => openCropImageModal(url, el.name)} className='absolute top-1 left-1 z-50 rounded-full p-2 bg-black text-white'>
+                      <FaScissors size={20} />
+                    </button>
+                    <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
+                  </div>
+                );
+              } else {
+                return (
+                  <video key={i} autoPlay muted loop className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url}></video>
+                );
+              }
+            })}
+          </div>
+
+          {/* Botón derecho */}
+          {!isFromMobile && showButtonRight && (
+            <button
+              onClick={scrollToRight}
+              className="w-10 h-10 text-xl flex justify-center items-center absolute right-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
+            >
+              &#8250;
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className='flex justify-center items-start gap-2'>
+        <div className="w-10 h-10 rounded-full overflow-hidden">
+          <img className='w-full h-full object-cover' src={user?.profileImage!} alt="pfp" />
+        </div>
+
+        <textarea
+          onChange={handleContentChange}
+          placeholder="What's on your mind?"
+          className="w-full p-2 border border-gray-300 rounded-md resize-none"
+          value={post.content}
+        />
+      </div>
+
+      <div className='w-full flex justify-between items-center p-3 gap-3 sticky bottom-0 backdrop-blur-sm bg-white/70 dark:bg-neutral-800/70'>
+        <div className="flex justify-center items-center gap-1">
+          <input
+            ref={InputMediaFiles}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={handleMediaFilesChange}
+            hidden
+          />
+
+          <button onClick={() => InputMediaFiles.current?.click()} className="postButton">
+            <MdOutlineImage />
+          </button>
+          <button className="postButton">
+            <MdOutlinePoll />
+          </button>
+          <button className="postButton">
+            <MdOutlineLocationOn />
+          </button>
+          <button className="postButton">
+            <MdOutlineEmojiEmotions />
+          </button>
+          <button className="postButton">
+            <MdOutlineGifBox />
+          </button>
+          <button className="postButton">
+            <MdCalendarMonth />
+          </button>
+        </div>
+
+        <div className="flex justify-center items-center gap-2">
+          <button onClick={handleCloseModal} className={`px-4 py-2 border borderColor bg-transparent rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100 itemHover`}>
+            Cancel
+          </button>
+          <button
+            onClick={() => handleCreatePost('/api/posts', post as NormalPostCreationProps)}
+            disabled={!canPost}
+            className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}
+          >
+            {isLoading ? "Posting..." : "Post"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const CreatePostFixedButton: React.FC<CreatePostFixedButtonProps> = ({ trigger }) => {
+  const { handleOpenModal } = useModal('globalModal');
+
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const openCreatePostModal = () => {
+    handleOpenModal(
+      <ModalContent initialContent='' initialMedia={[]} />
+    );
+  };
 
   if (!mounted) return null;
 
   return (
     <LoggedIn>
-      {
-        <Modal
-          width={500}
-          buttonTrigger={trigger}
-          onClose={handleOnCloseModal}
-          closeOnDarkClick={false}
-        >
-          <div className="bg-white dark:bg-neutral-800 pt-2">
-            {/* carousel */}
-            {post.media.length > 0 && <div className="relative w-full p-2">
-              {/* Botón izquierdo */}
-              {!isFromMobile && showButtonLeft && (
-                <button
-                  onClick={scrollToLeft}
-                  className="w-10 h-10 text-xl flex justify-center items-center absolute left-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
-                >
-                  &#8249;
-                </button>
-              )}
-
-              {/* Contenedor scrollable */}
-              <div
-                ref={ScrollContainerRef}
-                className="w-full flex justify-start items-stretch overflow-x-auto gap-4"
-                style={{ scrollbarWidth: 'none' }}
-              >
-                <>
-                  {post.media.map((el, i) => {
-                    const url = URL.createObjectURL(el)
-                    if (el.type.startsWith('image')) {
-                      return (
-                        <div className="relative">
-                          <Modal
-                            buttonTrigger={<button className='absolute top-1 left-1 z-50 rounded-full p-2 bg-black text-white'>
-                              <FaScissors size={20} />
-                            </button>}
-                            onClose={handleOnCloseModal}
-                            closeOnDarkClick={true} // Este modal sí se cierra al hacer click fuera
-                          >
-                            <ReactCrop crop={crop} onChange={c => setCrop(c)}>
-                              <img src={url} alt={el.name} />
-                            </ReactCrop>
-                          </Modal>
-                          <img className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url} alt={el.name} />
-                        </div>
-                      )
-                    } else {
-                      return (
-                        <video autoPlay muted loop className='w-20 h-20 shrink-0 object-cover rounded-md shadow-sm' src={url}></video>
-                      )
-                    }
-                  })}
-                </>
-              </div>
-
-              {/* Botón derecho */}
-              {!isFromMobile && showButtonRight && (
-                <button
-                  onClick={scrollToRight}
-                  className="w-10 h-10 text-xl flex justify-center items-center absolute right-2 top-1/2 -translate-y-1/2 z-50 dark:text-white text-dark bg-white dark:bg-neutral-800 rounded-full shadow-md hover:shadow-lg"
-                >
-                  &#8250;
-                </button>
-              )}
-            </div>}
-
-            {/* threading */}
-            <div className="w-full">
-              <ExampleThreadPost profileImage={user.profileImage || ""} setPost={setPost} />
-            </div>
-
-            <div className="bg-red-800 text-white flex justify-start items-start gap-2 p-2 rounded-md m-3">
-              <FiAlertTriangle className='shrink-0' size={25} />
-              <span className='text-sm'>Please note that videos may take longer to upload, and the preferred size is 4MB (or less than 2 minutes long).</span>
-            </div>
-
-            <div className='w-full flex justify-between items-center p-3 gap-3 sticky bottom-0 backdrop-blur-sm bg-white/70 dark:bg-neutral-800/70'>
-              <div className="flex justify-center items-center gap-1">
-                <input
-                  ref={InputMediaFiles}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*"
-                  onChange={handleMediaFilesChange}
-                  hidden
-                />
-
-                <button onClick={() => InputMediaFiles.current?.click()} className="postButton">
-                  <MdOutlineImage />
-                </button>
-                <button className="postButton">
-                  <MdOutlinePoll />
-                </button>
-                <button className="postButton">
-                  <MdOutlineLocationOn />
-                </button>
-                <button className="postButton">
-                  <MdOutlineEmojiEmotions />
-                </button>
-                <button className="postButton">
-                  <MdOutlineGifBox />
-                </button>
-                <button className="postButton">
-                  <MdCalendarMonth />
-                </button>
-              </div>
-
-              <div className="flex justify-center items-center gap-2">
-                <button onClick={handleOnCloseModal} className={`px-4 py-2 border borderColor bg-transparent rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100 itemHover`}>
-                  Cancel
-                </button>
-                <button onClick={handleCreatePost} disabled={!canPost} className={`${!canPost ? "opacity-70 pointer-events-none" : ""} px-4 py-2 text-white bg-orange-600 rounded-full text-sm font-medium hover:brightness-90 active:brightness-75 duration-100`}>
-                  {isLoading ? "Posting..." : "Post"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      }
+      {React.cloneElement(trigger, { onClick: () => openCreatePostModal() })}
     </LoggedIn>
-  )
-}
+  );
+};
 
-export default CreatePostFixedButton
-
-interface ExampleThreadPostProps {
-  profileImage: string;
-  setPost: React.Dispatch<React.SetStateAction<PostCreationProps>>;
-}
-
-// add thread style (line connecting)
-// change state setCanPost to all posts (threads) at the time
-const ExampleThreadPost = ({ profileImage, setPost }: ExampleThreadPostProps) => {
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const content = e.target.value;
-    setPost((prev) => ({ ...prev, content }));
-  }
-
-  return (
-    <div className='w-full flex justify-center items-start p-3 gap-2'>
-      <div className='self-start'>
-        <img className='w-10 h-10 object-cover rounded-full' src={profileImage} alt='profile image' />
-      </div>
-      <div className='w-full flex-1'>
-        <textarea
-          onChange={handleChange}
-          className='w-full p-2 rounded-md border dark:border-neutral-800 border-gray-500 bg-transparent'
-          placeholder='What are you thinking!?'
-        />
-      </div>
-    </div>
-  )
-}
+export default CreatePostFixedButton;
