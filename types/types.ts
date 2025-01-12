@@ -64,21 +64,12 @@ export type SearchResultsResponse = {
 };
 
 // --------- POST ----------
-// Post Media
-type ServerData = {
-  uploadedBy: string;
-};
-
 export type MediaFile = {
-  name: string;
-  size: number; // Tamaño en bytes
-  key: string; // Identificador único
-  lastModified: number;
+  name: string; // Nombre del archivo
+  // size: number; // Tamaño en bytes
+  key: string; // Identificador único (fileKey para eliminar archivos)
   url: string; // URL para acceder al archivo
-  appUrl: string; // URL específica de la aplicación
-  customId: string | null; // ID personalizado (opcional)
-  type: string; // Tipo MIME (por ejemplo, "image/png", "video/mp4"). Sirve para identificar qué tipo es el media
-  fileHash: string;
+  type: string; // Tipo MIME (por ejemplo, "image/png", "video/mp4"). Sirve para identificar qué tipo es el archivo
 };
 
 export type WhoCanReplyPost = 'Everyone' | 'Accounts you follow' | 'Verified accounts' | 'Only accounts you mention';
@@ -119,12 +110,24 @@ export interface PostProps {
       };
       content: string;
       media: MediaFile[];
+      // for reply posts
+      parentPost?: PostProps | null;
+      replyingTo?: { // User
+        _id: string;
+        username: string;
+      };
       createdAt: Date;
     };
     media: MediaFile[],
+    // for reply posts
+    parentPost?: PostProps | null;
+    replyingTo?: { // User
+      _id: string;
+      username: string;
+    };
     // post numbers
     likesCount: number;
-    commentsCount: number;
+    repliesCount: number;
     bookmarksCount: number;
     quotesCount: number;
     repostsCount: number;
@@ -156,13 +159,22 @@ export interface PostProps {
     };
     content: string;
     media: MediaFile[];
+    // for reply posts
+    parentPost: string; // id 
+    replyingTo: string; // username
     createdAt: Date;
   };
   media: MediaFile[];
+  // for reply posts
+  parentPost?: PostProps | null;
+  replyingTo?: { // User
+    _id: string;
+    username: string;
+  }; // user id
   type: 'normal' | 'repost' | 'quote';
   // post numbers
   likesCount: number;
-  commentsCount: number;
+  repliesCount: number;
   bookmarksCount: number;
   quotesCount: number;
   repostsCount: number;
@@ -188,6 +200,28 @@ export interface PostProps {
 export interface PostPageProps extends PostProps {
   isFollowingUser: boolean;
   isFollowedByUser: boolean;
+}
+
+// Para cada tipo de post se usan estos tipos que definen los props necesarios para crearlos
+export interface NormalPostCreationProps {
+  content: string,
+  media: File[], // las imágenes serán subidas desde el servidor
+  type: 'normal';
+}
+
+export interface QuotePostCreationProps {
+  content: string,
+  media: File[], // las imágenes serán subidas desde el servidor
+  quotedPost: string;
+  type: 'quote';
+}
+
+export interface ReplyPostCreationProps {
+  parentPost: string;
+  content: string,
+  media: File[], // las imágenes serán subidas desde el servidor
+  quotedPost: string;
+  type: 'reply';
 }
 
 // followers and following list item list response
