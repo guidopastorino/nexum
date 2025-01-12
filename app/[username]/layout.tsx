@@ -88,10 +88,12 @@ const layout = ({ params, children }: ProfileLayoutParams) => {
       <div className="relative w-full">
         {/* banner */}
         <div className='h-[150px]'>
-          <img
-            src={user?.bannerImage ? user?.bannerImage : "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg"}
-            className="w-full h-full object-cover"
-          />
+          <ShowUserProfileImage userProfileImageUrl={user?.bannerImage!}>
+            <img
+              src={user?.bannerImage ? user?.bannerImage : "https://www.solidbackgrounds.com/images/1584x396/1584x396-light-sky-blue-solid-color-background.jpg"}
+              className="w-full h-full object-cover"
+            />
+          </ShowUserProfileImage>
         </div>
         {/* user info */}
         <div className='flex flex-col justify-center items-stretch gap-2 p-4 mt-1'>
