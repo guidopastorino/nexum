@@ -8,50 +8,46 @@ import { useRouter } from 'nextjs-toploader/app';
 import Logo from './Logo';
 
 const FeedSelector = () => {
-  const { data: session } = useSession()
-  // Scroll events
-  const [isHidden, setIsHidden] = useState(false);
+  const { data: session } = useSession();
+
+  const [translateY, setTranslateY] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const maxOffset = 64;
 
   const handleScroll = () => {
     const currentScrollY = window.scrollY;
+    const deltaY = currentScrollY - lastScrollY;
 
-    if (currentScrollY > lastScrollY && currentScrollY > 50) {
-      // El usuario está desplazándose hacia abajo, ocultar
-      setIsHidden(true);
-    } else {
-      // El usuario está desplazándose hacia arriba, mostrar
-      setIsHidden(false);
-    }
+    setTranslateY((prev) => {
+      const newTranslateY = prev - deltaY;
+      return Math.max(Math.min(newTranslateY, 0), -maxOffset);
+    });
+
     setLastScrollY(currentScrollY);
   };
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [lastScrollY]);
 
-  const router = useRouter()
+  const router = useRouter();
 
   return (
-    <nav className={`
-      sticky top-0 w-full z-50 backdrop-blur-sm dark:bg-neutral-900/70 bg-white/70 duration-300 border-b borderColor
-      ${isHidden ? '-translate-y-[calc(100%-48px)]' : 'translate-y-0'}
-    `}>
+    <nav
+      className="sticky top-0 w-full z-50 backdrop-blur-sm dark:bg-neutral-900/70 bg-white/70 duration-200 border-b borderColor"
+      style={{ transform: `translateY(${translateY}px)` }} // Aplica el desplazamiento dinámico
+    >
       <div className="flex flex-col">
         <div className='flex justify-between items-center gap-3 p-2'>
           <div className="w-10 h-10">
             {session && <HamburgerMenu />}
           </div>
-
           <Link href="/">
             <Logo size={30} />
           </Link>
-
-          {/* manage pinned feeds btn */}
           <button onClick={() => router.push("/feeds")} className='w-12 h-12 flex justify-center items-center hover:bg-gray-200/45 dark:hover:bg-neutral-700/15 active:bg-gray-200/70 dark:active:bg-neutral-600/30'>
             <HiOutlineHashtag size={22} />
           </button>
@@ -66,7 +62,7 @@ const FeedSelector = () => {
         </div>
       </div>
     </nav>
-  )
-}
+  );
+};
 
 export default FeedSelector;
