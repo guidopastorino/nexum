@@ -1,4 +1,3 @@
-import { PostCreationProps } from "@/components/CreatePostFixedButton";
 import { FollowData, IUser, PostPageProps, PostProps, UpdateUserData, UserProfile } from "@/types/types";
 import ky, { HTTPError } from "ky"
 
@@ -79,25 +78,6 @@ export const updateUser = async (id: string, data: UpdateUserData): Promise<any>
     throw error;
   }
 };
-
-// create a 'normal' post
-export const createPost = async ({ content, media, type }: PostCreationProps) => {
-  try {
-    const res = await ky.post("/api/posts", { json: { content, media, type } });
-    if (!res.ok) {
-      console.error(`Error: ${res.statusText}`);
-      const errorData = await res.json();
-      console.error(errorData);
-      return errorData
-    } else {
-      const data = await res.json();
-      console.log(data);
-      return data
-    }
-  } catch (error) {
-    console.error("Network error:", error);
-  }
-}
 
 // Get the data of a post
 export const getPostData = async (postId: string): Promise<PostPageProps | null> => {

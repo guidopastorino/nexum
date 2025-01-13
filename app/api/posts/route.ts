@@ -8,8 +8,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from "@/utils/api/auth-options/authOptions";
 import { postPopulateOptions, postSelectionFields } from '@/utils/api/postPopulateOptions';
 import { mapPostData } from '@/utils/api/mapPostData';
-// Obtener todos los posts
 
+
+// Obtener todos los posts
 export async function GET(req: Request) {
   try {
     await dbConnect();
@@ -21,14 +22,25 @@ export async function GET(req: Request) {
     const pageSize = parseInt(url.searchParams.get("pageSize") || "35");
     const skip = (page - 1) * pageSize;
 
+    // Obtenemos los posts y les asignamos un valor aleatorio para ordenar
     const posts = await Post.find()
       .skip(skip)
       .limit(pageSize)
       .populate(postPopulateOptions)
-      .select(postSelectionFields)
-      .sort({ createdAt: -1 });
+      .select(postSelectionFields);
 
-    const enrichedPosts = await mapPostData(posts, userId);
+    // Asignamos un valor aleatorio a cada post
+    const postsWithRandomOrder = posts.map(post => ({
+      ...post.toObject(),
+      randomValue: Math.random() // Generamos un valor aleatorio para cada post
+    }));
+
+    // Ordenamos por el valor aleatorio
+    postsWithRandomOrder.sort((a, b) => a.randomValue - b.randomValue);
+
+    // Mapeamos los datos enriquecidos como en tu implementación original
+    const enrichedPosts = await mapPostData(postsWithRandomOrder, userId);
+
     return NextResponse.json(enrichedPosts, { status: 200 });
   } catch (error) {
     console.error(error);
@@ -85,7 +97,7 @@ export async function POST(req: Request, res: Response) {
       if (!repostedFrom) {
         return NextResponse.json({ message: "RepostedFrom ID is missing" }, { status: 400 });
       }
-    
+
       try {
         // Manejar el repost
         await handleRepost(repostedFrom, userId);
@@ -97,7 +109,7 @@ export async function POST(req: Request, res: Response) {
       if (!quotedPost) {
         return NextResponse.json({ message: "QuotedPost ID is missing" }, { status: 400 });
       }
-    
+
       try {
         // Manejar el quote
         await handleQuote(quotedPost, newPost._id);

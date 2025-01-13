@@ -25,15 +25,16 @@ const AuthModal = ({ buttonTrigger }: AuthModalProps) => {
   const [showRegister, setShowRegister] = useState(false);
 
   return (
-    <Modal buttonTrigger={buttonTrigger}>
-      <div className="bg-white dark:bg-neutral-800 px-3 py-5">
-        {showRegister ? (
-          <RegisterForm setShowRegister={setShowRegister} />
-        ) : (
-          <LoginForm setShowRegister={setShowRegister} />
-        )}
-      </div>
-    </Modal>
+    // <Modal buttonTrigger={buttonTrigger}>
+    //   <div className="bg-white dark:bg-neutral-800 px-3 py-5">
+    //     {showRegister ? (
+    //       <RegisterForm setShowRegister={setShowRegister} />
+    //     ) : (
+    //       <LoginForm setShowRegister={setShowRegister} />
+    //     )}
+    //   </div>
+    // </Modal>
+    null
   );
 };
 

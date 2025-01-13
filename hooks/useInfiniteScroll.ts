@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
 import { useEffect } from 'react';
 import { useInfiniteQuery } from 'react-query';
 
 interface InfiniteScrollProps<T> {
   queryKey: any;
-  fetcher: (page: number, pageSize: number) => Promise<T[]>;
+  fetcher: (page: number, pageSize: number) => Promise<T[]>; 
   pageSize?: number;
   refetchOnWindowFocus?: boolean;
   staleTime?: number;
   cacheTime?: number;
-  scrollOffset?: number; // Distancia al final de la página para cargar más
+  scrollOffset?: number;
   enabled?: boolean;
 }
 
@@ -21,8 +21,8 @@ function useInfiniteScroll<T>({
   refetchOnWindowFocus = false,
   staleTime = 1000 * 60 * 5,
   cacheTime = 1000 * 60 * 10,
-  scrollOffset = 300, // Default: cargar más 300px antes del final de la página
-  enabled = true
+  scrollOffset = 300,
+  enabled = true,
 }: InfiniteScrollProps<T>) {
   const {
     data,
@@ -32,6 +32,7 @@ function useInfiniteScroll<T>({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch
   } = useInfiniteQuery(
     queryKey,
     ({ pageParam = 1 }) => fetcher(pageParam, pageSize),
@@ -46,10 +47,8 @@ function useInfiniteScroll<T>({
     }
   );
 
-  // Flatten data into a single array
   const items = data?.pages.flat() ?? [];
 
-  // Lógica de scroll infinito
   useEffect(() => {
     const handleScroll = () => {
       const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
@@ -75,6 +74,7 @@ function useInfiniteScroll<T>({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   };
 }
 
